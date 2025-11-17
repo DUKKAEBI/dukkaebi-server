@@ -76,26 +76,26 @@ public class GeminiService {
     private Map<String, Object> buildRequestBody(String userMessage) {
         Map<String, Object> body = new HashMap<>();
 
-        // System instruction 설정
+        // 1. 시스템 인스트럭션 설정 (챗봇의 페르소나와 규칙)
         Map<String, Object> systemInstruction = new HashMap<>();
         Map<String, String> systemParts = new HashMap<>();
         systemParts.put("text", SYSTEM_INSTRUCTION);
         systemInstruction.put("parts", List.of(systemParts));
         body.put("system_instruction", systemInstruction);
 
-        // User message 설정
+        // 2. 사용자 메시지 설정
         Map<String, Object> userContent = new HashMap<>();
         userContent.put("role", "user");
         Map<String, String> userParts = new HashMap<>();
-        userParts.put("text", userMessage);
+        userParts.put("text", userMessage); // 사용자가 입력한 메시지
         userContent.put("parts", List.of(userParts));
 
         body.put("contents", List.of(userContent));
 
-        // Generation config
+        // 3. 생성 설정
         Map<String, Object> generationConfig = new HashMap<>();
-        generationConfig.put("temperature", 0.7);
-        generationConfig.put("maxOutputTokens", 1000);
+        generationConfig.put("temperature", 0.7); // 창의성 조절
+        generationConfig.put("maxOutputTokens", 1000); // 최대 토큰 수
         body.put("generationConfig", generationConfig);
 
         return body;
