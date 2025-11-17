@@ -1,9 +1,9 @@
 spring:
   datasource:
-    url: jdbc:mysql://
+    url: ${DB_URL}
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username:
-    password:
+    username: ${DB_USER}
+    password: ${DB_PW}
 
   jpa:
     hibernate:
@@ -14,6 +14,28 @@ jwt:
   secretKey: ${SECRET_KEY}
   refreshExp: 604800000 # 1week
   accessExp: 6000000 # 2hour
+
+gemini:
+  api-key: ${GEMINI_API_KEY}
+  api-url: https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent
+#  api-url: https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent
+
+resilience4j:
+  ratelimiter:
+    instances:
+      geminiLimiter:
+        limit-refresh-period: 1s
+        limit-for-period: 3  # 초당 3회로 제한(필요하면 조절)
+        timeout-duration: 0
+
+  retry:
+    instances:
+      geminiRetry:
+        max-attempts: 3
+        wait-duration: 1s
+        retry-exceptions:
+          - org.springframework.web.client.HttpClientErrorException$TooManyRequests
+        exponential-backoff-multiplier: 2
 
 springdoc:
   api-docs:
