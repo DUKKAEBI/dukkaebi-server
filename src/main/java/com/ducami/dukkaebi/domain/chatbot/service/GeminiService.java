@@ -76,6 +76,10 @@ public class GeminiService {
         } catch (HttpClientErrorException.TooManyRequests e) {
             log.error("429 Too Many Requests 발생 — Retry 시도 중...");
             throw e; // Retry가 잡아서 재시도함
+        } catch (HttpClientErrorException e) {
+            // 상세 오류 본문 로깅
+            log.error("Gemini API 호출 실패: {} - body: {}", e.getStatusCode(), e.getResponseBodyAsString(), e);
+            throw new CustomException(ChatbotErrorCode.API_CALL_FAILED);
         } catch (Exception e) {
             log.error("Gemini API 호출 실패: {}", e.getMessage(), e);
             throw new CustomException(ChatbotErrorCode.API_CALL_FAILED);
@@ -85,22 +89,22 @@ public class GeminiService {
     private Map<String, Object> buildRequestBody(String userMessage) {
         Map<String, Object> body = new HashMap<>();
 
-        // 1. 시스템 인스트럭션 설정 (챗봇의 페르소나와 규칙)
-        Map<String, Object> systemContent = new HashMap<>();
-        systemContent.put("role", "system");
-        systemContent.put("parts", List.of(Map.of("text", SYSTEM_INSTRUCTION)));
+        // 1. 시스템 지시문 설정
+        Map<String, Object> instructionContent = new HashMap<>();
+        instructionContent.put("role", "user");
+        instructionContent.put("parts", List.of(Map.of("text", SYSTEM_INSTRUCTION)));
 
         // 2. 사용자 메시지 설정
         Map<String, Object> userContent = new HashMap<>();
         userContent.put("role", "user");
         userContent.put("parts", List.of(Map.of("text", userMessage)));
 
-        body.put("contents", List.of(systemContent, userContent));
+        body.put("contents", List.of(instructionContent, userContent));
 
         // 3. 생성 설정
         Map<String, Object> generationConfig = new HashMap<>();
-        generationConfig.put("temperature", 0.7); // 창의성 조절
-        generationConfig.put("maxOutputTokens", 1000); // 최대 토큰 수
+        generationConfig.put("temperature", 0.7);
+        generationConfig.put("maxOutputTokens", 1000);
         body.put("generationConfig", generationConfig);
 
         return body;
