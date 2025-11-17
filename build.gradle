@@ -50,9 +50,9 @@ dependencies {
 	implementation 'io.jsonwebtoken:jjwt-jackson:0.12.6'
 
 	// Resilience4j
-	implementation 'io.github.resilience4j:resilience4j-spring-boot3'
-	implementation 'io.github.resilience4j:resilience4j-retry'
-	implementation 'io.github.resilience4j:resilience4j-ratelimiter'
+	implementation 'io.github.resilience4j:resilience4j-spring-boot3:2.2.0'
+	implementation 'io.github.resilience4j:resilience4j-retry:2.2.0'
+	implementation 'io.github.resilience4j:resilience4j-ratelimiter:2.2.0'
 
 	// Testing
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
