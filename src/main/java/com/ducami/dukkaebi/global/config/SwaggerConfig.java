@@ -14,7 +14,7 @@ public class SwaggerConfig {
     public OpenAPI api() {
         return new OpenAPI()
                 .info(
-                        new Info().title("Dukkaebi Talk")
+                        new Info().title("Dukkaebi API")
                                 .description("Dukkaebi API")
                                 .version("1.0.0")
                 )
