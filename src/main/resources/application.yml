@@ -15,6 +15,10 @@ jwt:
   refreshExp: 604800000 # 1week
   accessExp: 6000000 # 2hour
 
+gemini:
+  api-key: ${GEMINI_API_KEY}
+  api-url: https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent
+
 springdoc:
   api-docs:
     enabled: true
