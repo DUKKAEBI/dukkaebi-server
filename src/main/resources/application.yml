@@ -10,6 +10,11 @@ spring:
       ddl-auto: update
     show-sql: true
 
+jwt:
+  secretKey: ${SECRET_KEY}
+  refreshExp: 604800000 # 1week
+  accessExp: 6000000 # 2hour
+
 springdoc:
   api-docs:
     enabled: true
