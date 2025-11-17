@@ -17,7 +17,25 @@ jwt:
 
 gemini:
   api-key: ${GEMINI_API_KEY}
-  api-url: https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent
+  api-url: https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent
+#  api-url: https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent
+
+resilience4j:
+  ratelimiter:
+    instances:
+      geminiLimiter:
+        limit-refresh-period: 1s
+        limit-for-period: 3  # 초당 3회로 제한(필요하면 조절)
+        timeout-duration: 0
+
+  retry:
+    instances:
+      geminiRetry:
+        max-attempts: 3
+        wait-duration: 1s
+        retry-exceptions:
+          - org.springframework.web.client.HttpClientErrorException$TooManyRequests
+        exponential-backoff-multiplier: 2
 
 springdoc:
   api-docs:

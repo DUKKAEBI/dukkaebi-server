@@ -12,8 +12,12 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.beans.factory.annotation.Value;
+
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.retry.annotation.Retry;
 
 import java.util.HashMap;
 import java.util.List;
@@ -32,6 +36,9 @@ public class GeminiService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
+    private static final String RATE_LIMITER_NAME = "geminiLimiter";
+    private static final String RETRY_NAME = "geminiRetry";
+
     private static final String SYSTEM_INSTRUCTION = """
             당신은 '두비'라는 이름의 코딩 학습 도우미 챗봇입니다.
             
@@ -48,6 +55,8 @@ public class GeminiService {
             10. 답변은 간결하면서도 충분한 정보를 담아 제공하세요.
             """;
 
+    @RateLimiter(name = RATE_LIMITER_NAME)
+    @Retry(name = RETRY_NAME)
     public String generateResponse(String userMessage) {
         try {
             String url = apiUrl + "?key=" + apiKey;
@@ -67,6 +76,10 @@ public class GeminiService {
             );
 
             return parseResponse(response.getBody());
+
+        } catch (HttpClientErrorException.TooManyRequests e) {
+            log.error("429 Too Many Requests 발생 — Retry 시도 중...");
+            throw e; // Retry가 잡아서 재시도함
         } catch (Exception e) {
             log.error("Gemini API 호출 실패: {}", e.getMessage(), e);
             throw new CustomException(ChatbotErrorCode.API_CALL_FAILED);
