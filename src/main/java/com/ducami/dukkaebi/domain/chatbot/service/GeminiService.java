@@ -77,20 +77,16 @@ public class GeminiService {
         Map<String, Object> body = new HashMap<>();
 
         // 1. 시스템 인스트럭션 설정 (챗봇의 페르소나와 규칙)
-        Map<String, Object> systemInstruction = new HashMap<>();
-        Map<String, String> systemParts = new HashMap<>();
-        systemParts.put("text", SYSTEM_INSTRUCTION);
-        systemInstruction.put("parts", List.of(systemParts));
-        body.put("system_instruction", systemInstruction);
+        Map<String, Object> systemContent = new HashMap<>();
+        systemContent.put("role", "system");
+        systemContent.put("parts", List.of(Map.of("text", SYSTEM_INSTRUCTION)));
 
         // 2. 사용자 메시지 설정
         Map<String, Object> userContent = new HashMap<>();
         userContent.put("role", "user");
-        Map<String, String> userParts = new HashMap<>();
-        userParts.put("text", userMessage); // 사용자가 입력한 메시지
-        userContent.put("parts", List.of(userParts));
+        userContent.put("parts", List.of(Map.of("text", userMessage)));
 
-        body.put("contents", List.of(userContent));
+        body.put("contents", List.of(systemContent, userContent));
 
         // 3. 생성 설정
         Map<String, Object> generationConfig = new HashMap<>();
