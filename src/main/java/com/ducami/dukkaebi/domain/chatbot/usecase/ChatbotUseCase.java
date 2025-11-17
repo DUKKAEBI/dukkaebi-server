@@ -1,8 +1,8 @@
 package com.ducami.dukkaebi.domain.chatbot.usecase;
 
 import com.ducami.dukkaebi.domain.chatbot.error.ChatbotErrorCode;
-import com.ducami.dukkaebi.domain.chatbot.presentation.dto.request.ChatRequest;
-import com.ducami.dukkaebi.domain.chatbot.presentation.dto.response.ChatResponse;
+import com.ducami.dukkaebi.domain.chatbot.presentation.dto.request.ChatReq;
+import com.ducami.dukkaebi.domain.chatbot.presentation.dto.response.ChatRes;
 import com.ducami.dukkaebi.domain.chatbot.service.GeminiService;
 import com.ducami.dukkaebi.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
@@ -15,10 +15,10 @@ import org.springframework.stereotype.Service;
 public class ChatbotUseCase {
     private final GeminiService geminiService;
 
-    public ChatResponse chat(ChatRequest req) {
+    public ChatRes chat(ChatReq req) {
         try {
             String response = geminiService.generateResponse(req.message());
-            return ChatResponse.builder()
+            return ChatRes.builder()
                     .response(response)
                     .build();
         } catch (Exception e) {

@@ -1,7 +1,7 @@
 package com.ducami.dukkaebi.domain.chatbot.presentation;
 
-import com.ducami.dukkaebi.domain.chatbot.presentation.dto.request.ChatRequest;
-import com.ducami.dukkaebi.domain.chatbot.presentation.dto.response.ChatResponse;
+import com.ducami.dukkaebi.domain.chatbot.presentation.dto.request.ChatReq;
+import com.ducami.dukkaebi.domain.chatbot.presentation.dto.response.ChatRes;
 import com.ducami.dukkaebi.domain.chatbot.usecase.ChatbotUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ public class ChatbotController {
 
     @PostMapping("/chat")
     @Operation(summary = "챗봇 대화")
-    public ChatResponse chat(@Validated @RequestBody ChatRequest req) {
+    public ChatRes chat(@RequestBody ChatReq req) {
         return chatbotUseCase.chat(req);
     }
 }
