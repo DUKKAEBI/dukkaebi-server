@@ -25,9 +25,13 @@ public record ProblemRes (
                 problem.getDifficulty(),
                 problem.getSolvedCount(),
                 (problem.getSolvedCount()/problem.getAttemptCount()* 1000.0)/10.0,
-                history.getSolvedResult(),
+                getSolvedResult(history),
                 problem.getAddedAt()
         );
+    }
+
+    private static SolvedResult getSolvedResult(ProblemHistory problemHistory) {
+        return problemHistory != null ? problemHistory.getSolvedResult() : SolvedResult.NOT_SOLVED;
     }
 
 
