@@ -1,10 +1,12 @@
 package com.ducami.dukkaebi.domain.problem.presentation;
 
+import com.ducami.dukkaebi.domain.problem.presentation.dto.request.ProblemFilterReq;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemRes;
 import com.ducami.dukkaebi.domain.problem.usecase.ProblemUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -20,5 +22,12 @@ public class ProblemController {
     @Operation(summary = "모든 문제 조회")
     public List<ProblemRes> getProblems() {
         return problemUseCase.getProblem();
+    }
+
+
+    @GetMapping
+    @Operation(summary = "")
+    public List<ProblemRes> getProblems(@RequestBody ProblemFilterReq filter) {
+        return problemUseCase.getProblemWithFilter(filter);
     }
 }

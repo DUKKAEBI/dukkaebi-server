@@ -2,6 +2,7 @@ package com.ducami.dukkaebi.domain.problem.usecase;
 
 import com.ducami.dukkaebi.domain.problem.domain.Problem;
 import com.ducami.dukkaebi.domain.problem.error.ProblemErrorCode;
+import com.ducami.dukkaebi.domain.problem.presentation.dto.request.ProblemFilterReq;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemRes;
 import com.ducami.dukkaebi.domain.problem.service.ProblemService;
 import com.ducami.dukkaebi.global.exception.CustomException;
@@ -34,5 +35,14 @@ public class ProblemUseCase {
             log.error("문제 목록 조회 실패: {}", e.getMessage(), e);
             throw new CustomException(ProblemErrorCode.PROBLEM_FETCH_FAILED);
         }
+    }
+
+    public List<ProblemRes> getProblemWithFilter(ProblemFilterReq filter) {
+        // Service에서 바로 ProblemRes 리스트 받음
+        return problemService.getProblemsWithFilter(
+                filter.difficulty(),
+                filter.time(),
+                filter.correctRate()
+        );
     }
 }
