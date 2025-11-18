@@ -21,7 +21,6 @@ public class ProblemController {
         return problemUseCase.getProblem();
     }
 
-
     @GetMapping
     @Operation(summary = "문제 필터링")
     public List<ProblemRes> getProblems(@RequestBody ProblemFilterReq filter) {

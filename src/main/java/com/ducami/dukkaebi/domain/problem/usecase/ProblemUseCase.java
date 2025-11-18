@@ -23,13 +23,10 @@ public class ProblemUseCase {
         try {
             log.info("문제 목록 조회 요청");
 
-            List<Problem> problems = problemService.getAllProblems();
-            List<ProblemRes> response = problems.stream()
-                    .map(ProblemRes::from)
-                    .collect(Collectors.toList());
+            List<ProblemRes> problems = problemService.getAllProblems();
 
-            log.info("문제 목록 조회 성공 - {}개", response.size());
-            return response;
+            log.info("문제 목록 조회 성공 - {}개", problems.size());
+            return problems;
 
         } catch (Exception e) {
             log.error("문제 목록 조회 실패: {}", e.getMessage(), e);
