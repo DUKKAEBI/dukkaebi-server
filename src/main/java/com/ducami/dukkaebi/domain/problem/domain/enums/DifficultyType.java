@@ -1,5 +1,5 @@
 package com.ducami.dukkaebi.domain.problem.domain.enums;
 
 public enum DifficultyType {
-    ALL, IRON, BRONZE, SLIVER, GOLD, JADE
+    COPPER, IRON, SLIVER, GOLD, JADE
 }

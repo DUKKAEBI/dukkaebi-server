@@ -32,11 +32,5 @@ public class Problem {
     private Integer attemptCount = 0;
 
     @Column(nullable = false)
-    private Boolean isFailed = false;
-
-    @Column(nullable = false)
-    private Boolean isSolved = false;
-
-    @Column(nullable = false)
-    private LocalDate addedAt;
+    private LocalDate addedAt = LocalDate.now();
 }
