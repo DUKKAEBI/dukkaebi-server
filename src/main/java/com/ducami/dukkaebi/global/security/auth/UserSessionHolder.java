@@ -22,4 +22,9 @@ public class UserSessionHolder{
             throw new CustomException(AuthErrorCode.USER_NOT_FOUND);
         }
     }
+
+    // 편의 메서드: 자주 쓰는 사용자 ID 바로 반환
+    public Long getUserId() {
+        return getUser().getId();
+    }
 }

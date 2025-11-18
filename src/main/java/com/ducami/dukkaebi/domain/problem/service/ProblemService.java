@@ -9,7 +9,7 @@ import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemJpaRepo;
 import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemTestCaseJpaRepo;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemDetailRes;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemRes;
-import com.ducami.dukkaebi.global.common.repo.UserSessionHolder;
+import com.ducami.dukkaebi.global.security.auth.UserSessionHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,7 +31,7 @@ public class ProblemService {
     public List<ProblemRes> getAllProblems() {
         log.info("모든 문제 조회 시작");
 
-        Long userId = userSessionHolder.get().getId();
+        Long userId = userSessionHolder.getUserId();
 
         // 유저의 모든 히스토리 조회
         List<ProblemHistory> historyList = problemHistoryJpaRepo.findByUser_Id(userId);
@@ -75,7 +75,7 @@ public class ProblemService {
     public List<ProblemRes> getProblemsWithFilter(DifficultyType difficulty, String time, String correctRate) {
         log.info("문제 조회 - difficulty: {}, time: {}, correctRate: {}", difficulty, time, correctRate);
 
-        Long userId = userSessionHolder.get().getId();
+        Long userId = userSessionHolder.getUserId();
 
         // 유저의 모든 문제 히스토리 조회
         List<ProblemHistory> historyList = problemHistoryJpaRepo.findByUser_Id(userId);
@@ -109,7 +109,7 @@ public class ProblemService {
     public List<ProblemRes> getProblemsWithName(String name) {
         log.info("문제 이름으로 조회 - {}", name);
 
-        Long userId = userSessionHolder.get().getId();
+        Long userId = userSessionHolder.getUserId();
 
         // 유저의 모든 문제 히스토리 조회
         List<ProblemHistory> historyList = problemHistoryJpaRepo.findByUser_Id(userId);
