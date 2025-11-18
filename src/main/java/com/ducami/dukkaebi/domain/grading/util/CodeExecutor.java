@@ -1,6 +1,6 @@
 package com.ducami.dukkaebi.domain.grading.util;
 
-import com.ducami.dukkaebi.domain.grading.service.ExecutionResult;
+import com.ducami.dukkaebi.domain.grading.model.ExecutionResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 

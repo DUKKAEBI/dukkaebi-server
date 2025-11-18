@@ -1,6 +1,7 @@
 package com.ducami.dukkaebi.domain.grading.service;
 
 import com.ducami.dukkaebi.domain.grading.domain.enums.JudgeStatus;
+import com.ducami.dukkaebi.domain.grading.model.ExecutionResult;
 import com.ducami.dukkaebi.domain.grading.presentation.dto.response.JudgeResultRes;
 import com.ducami.dukkaebi.domain.grading.util.CodeExecutor;
 import com.ducami.dukkaebi.domain.problem.domain.Problem;
