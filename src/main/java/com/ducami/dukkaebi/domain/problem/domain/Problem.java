@@ -22,6 +22,15 @@ public class Problem {
     private String name;
 
     @Column(nullable = false)
+    private String description;
+
+    @Column(nullable = false)
+    private String input;
+
+    @Column(nullable = false)
+    private String output;
+
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private DifficultyType difficulty;
 

@@ -1,6 +1,7 @@
 package com.ducami.dukkaebi.domain.problem.presentation;
 
 import com.ducami.dukkaebi.domain.problem.presentation.dto.request.ProblemFilterReq;
+import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemDetailRes;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemRes;
 import com.ducami.dukkaebi.domain.problem.usecase.ProblemUseCase;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,5 +32,11 @@ public class ProblemController {
     @Operation(summary = "이름으로 검색")
     public List<ProblemRes> getProblems(@RequestParam String name) {
         return problemUseCase.getProblemWithName(name);
+    }
+
+    @GetMapping("/{problemId}")
+    @Operation(summary = "문제 자세히 보기")
+    public ProblemDetailRes getProblem(@PathVariable Long problemId) {
+        return problemUseCase.getOneProblem(problemId);
     }
 }

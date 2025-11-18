@@ -3,6 +3,7 @@ package com.ducami.dukkaebi.domain.problem.usecase;
 import com.ducami.dukkaebi.domain.problem.domain.Problem;
 import com.ducami.dukkaebi.domain.problem.error.ProblemErrorCode;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.request.ProblemFilterReq;
+import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemDetailRes;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemRes;
 import com.ducami.dukkaebi.domain.problem.service.ProblemService;
 import com.ducami.dukkaebi.global.exception.CustomException;
@@ -45,5 +46,21 @@ public class ProblemUseCase {
 
     public List<ProblemRes> getProblemWithName(String name) {
         return problemService.getProblemsWithName(name);
+    }
+
+    public ProblemDetailRes getOneProblem(Long problemId) {
+        try {
+            log.info("문제 조회 요청");
+
+            ProblemDetailRes problem = problemService.getProblem(problemId);
+
+            log.info("문제 조회 성공");
+
+            return problem;
+
+        } catch (Exception e) {
+            log.error("문제 조회 실패: {}", e.getMessage(), e);
+            throw new CustomException(ProblemErrorCode.PROBLEM_FETCH_FAILED);
+        }
     }
 }
