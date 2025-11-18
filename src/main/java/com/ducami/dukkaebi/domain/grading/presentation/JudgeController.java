@@ -15,11 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RequestMapping("/solve")
 public class JudgeController {
-
     private final JudgeUseCase judgeUseCase;
 
     @PostMapping("/grading")
-    @Operation(summary = "문제 제출하기")
+    @Operation(summary = "문제 제출하기", description = "language : java or python")
     public JudgeResultRes submitCode(@RequestBody CodeSubmitReq request) {
         return judgeUseCase.submitCode(request);
     }

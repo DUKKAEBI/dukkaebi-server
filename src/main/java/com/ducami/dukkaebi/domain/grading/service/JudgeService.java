@@ -1,11 +1,17 @@
 package com.ducami.dukkaebi.domain.grading.service;
 
 import com.ducami.dukkaebi.domain.grading.domain.enums.JudgeStatus;
+import com.ducami.dukkaebi.domain.grading.model.ExecutionResult;
 import com.ducami.dukkaebi.domain.grading.presentation.dto.response.JudgeResultRes;
+import com.ducami.dukkaebi.domain.grading.util.CodeExecutor;
 import com.ducami.dukkaebi.domain.problem.domain.Problem;
 import com.ducami.dukkaebi.domain.problem.domain.ProblemTestCase;
 import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemJpaRepo;
 import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemTestCaseJpaRepo;
+import com.ducami.dukkaebi.domain.problem.domain.enums.DifficultyType;
+import com.ducami.dukkaebi.domain.user.domain.User;
+import com.ducami.dukkaebi.domain.user.domain.repo.UserJpaRepo;
+import com.ducami.dukkaebi.global.security.auth.UserSessionHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,18 +25,20 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class JudgeService {
-
     private final ProblemJpaRepo problemJpaRepo;
     private final ProblemTestCaseJpaRepo testCaseJpaRepo;
     private final CodeExecutor codeExecutor;
+    private final UserSessionHolder userSessionHolder;
+    private final UserJpaRepo userJpaRepo;
 
     /**
      * 백준 스타일 코드 채점
      * 1. 모든 테스트케이스에 대해 코드 실행
      * 2. 출력 비교
-     * 3. 결과 반환
+     * 3. 결과 반환 (+ 정답 시 점수 부여)
      */
 
+    @Transactional // 점수 업데이트를 위해 쓰기 트랜잭션
     public JudgeResultRes judgeCode(Long problemId, String code, String language) {
         log.info("코드 채점 시작 - problemId: {}, language: {}", problemId, language);
 
@@ -126,6 +134,21 @@ public class JudgeService {
             }
         }
 
+        // 정답 처리 시 점수 부여
+        if (finalStatus == JudgeStatus.ACCEPTED) {
+            int reward = difficultyToScore(problem.getDifficulty());
+            try {
+                User sessionUser = userSessionHolder.getUser();
+                // 영속 엔티티로 다시 조회해 업데이트
+                User user = userJpaRepo.findById(sessionUser.getId())
+                        .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                user.addScore(reward);
+                log.info("점수 부여 - userId: {}, +{}점 (난이도: {}), 총점: {}", user.getId(), reward, problem.getDifficulty(), user.getScore());
+            } catch (Exception e) {
+                log.error("점수 부여 실패: {}", e.getMessage(), e);
+            }
+        }
+
         log.info("채점 완료 - status: {}, passed: {}/{}", finalStatus, passedCount, testCases.size());
 
         return new JudgeResultRes(
@@ -136,6 +159,16 @@ public class JudgeService {
                 errorMessage,
                 results
         );
+    }
+
+    private int difficultyToScore(DifficultyType difficulty) {
+        return switch (difficulty) {
+            case COPPER -> 1;   // 구리
+            case IRON -> 3;     // 철
+            case SLIVER -> 5;   // 은 (오타 주의: SLIVER)
+            case GOLD -> 10;    // 금
+            case JADE -> 15;    // 옥
+        };
     }
 
     /**
