@@ -3,6 +3,7 @@ package com.ducami.dukkaebi.domain.problem.presentation.dto.response;
 import com.ducami.dukkaebi.domain.problem.domain.Problem;
 import com.ducami.dukkaebi.domain.problem.domain.ProblemHistory;
 import com.ducami.dukkaebi.domain.problem.domain.enums.DifficultyType;
+import com.ducami.dukkaebi.domain.problem.domain.enums.SolvedResult;
 import lombok.Builder;
 
 import java.time.LocalDate;
@@ -14,8 +15,7 @@ public record ProblemRes (
         DifficultyType difficulty,
         Integer solvedCount,
         Double correctRate,
-        boolean isFailed,
-        boolean isPassed,
+        SolvedResult solvedResult,
         LocalDate addedAt
 ) {
     public static ProblemRes from(Problem problem, ProblemHistory history) {
@@ -25,8 +25,7 @@ public record ProblemRes (
                 problem.getDifficulty(),
                 problem.getSolvedCount(),
                 (problem.getSolvedCount()/problem.getAttemptCount()* 1000.0)/10.0,
-                history.getIsFailed(),
-                history.getIsSolved(),
+                history.getSolvedResult(),
                 problem.getAddedAt()
         );
     }
