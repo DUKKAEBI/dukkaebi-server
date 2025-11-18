@@ -45,4 +45,8 @@ public class ProblemUseCase {
                 filter.correctRate()
         );
     }
+
+    public List<ProblemRes> getProblemWithName(String name) {
+        return problemService.getProblemsWithName(name);
+    }
 }
