@@ -26,10 +26,13 @@ public class Contest {
     private Long id;
 
     @Column(nullable = false)
-    private String name;
+    private String code;
 
     @Column(nullable = false)
-    private String explanation;
+    private String title;
+
+    @Column(nullable = false)
+    private String description;
 
     @Column(nullable = false)
     private LocalDate startDate;
