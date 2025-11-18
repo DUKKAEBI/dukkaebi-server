@@ -52,6 +52,16 @@ public class ProblemService {
         return problemResList;
     }
 
+    public List<ProblemRes> getProblemsWithName(String name) {
+        log.info("문제 이름으로 조회 - {}", name);
+
+        List<Problem> problems = problemJpaRepo.searchByName(name);
+
+        return problems.stream()
+                .map(ProblemRes::from)
+                .collect(Collectors.toList());
+    }
+
     /**
      * 정답률 기준 정렬
      */

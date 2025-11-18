@@ -10,4 +10,6 @@ import java.util.List;
 @Repository
 public interface ProblemJpaRepo extends JpaRepository<Problem, Long> {
     List<Problem> findByDifficulty(DifficultyType difficulty);
+
+    List<Problem> searchByName(String name);
 }

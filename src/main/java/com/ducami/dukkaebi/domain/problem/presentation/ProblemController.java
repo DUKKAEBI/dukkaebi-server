@@ -5,10 +5,7 @@ import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemRes;
 import com.ducami.dukkaebi.domain.problem.usecase.ProblemUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -26,8 +23,14 @@ public class ProblemController {
 
 
     @GetMapping
-    @Operation(summary = "")
+    @Operation(summary = "문제 필터링")
     public List<ProblemRes> getProblems(@RequestBody ProblemFilterReq filter) {
         return problemUseCase.getProblemWithFilter(filter);
+    }
+
+    @GetMapping("/search")
+    @Operation(summary = "이름으로 검색")
+    public List<ProblemRes> getProblems(@RequestParam String name) {
+        return problemUseCase.getProblemWithName(name);
     }
 }
