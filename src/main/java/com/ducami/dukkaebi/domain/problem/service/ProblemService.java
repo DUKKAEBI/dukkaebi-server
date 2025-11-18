@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class ProblemService {
-
     private final ProblemJpaRepo problemJpaRepo;
     private final ProblemHistoryJpaRepo problemHistoryJpaRepo;
     private final ProblemTestCaseJpaRepo problemTestCaseJpaRepo;

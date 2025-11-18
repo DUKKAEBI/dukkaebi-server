@@ -13,6 +13,7 @@ public record SignUpReq(
                 .password(password)
                 .nickname(req.nickname)
                 .role(UserType.STUDENT)
+                .score(0)
                 .build();
     }
 }

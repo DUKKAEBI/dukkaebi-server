@@ -1,6 +1,6 @@
 package com.ducami.dukkaebi.domain.grading.usecase;
 
-import com.ducami.dukkaebi.domain.grading.error.JudgeError;
+import com.ducami.dukkaebi.domain.grading.error.JudgeErrorCode;
 import com.ducami.dukkaebi.domain.grading.presentation.dto.request.CodeSubmitReq;
 import com.ducami.dukkaebi.domain.grading.presentation.dto.response.JudgeResultRes;
 import com.ducami.dukkaebi.domain.grading.service.JudgeService;
@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class JudgeUseCase {
-
     private final JudgeService judgeService;
 
     public JudgeResultRes submitCode(CodeSubmitReq request) {
@@ -34,7 +33,7 @@ public class JudgeUseCase {
 
         } catch (Exception e) {
             log.error("코드 제출 실패: {}", e.getMessage(), e);
-            throw new CustomException(JudgeError.JUDGE_FAILED);
+            throw new CustomException(JudgeErrorCode.JUDGE_FAILED);
         }
     }
 }
