@@ -1,0 +1,51 @@
+package com.ducami.dukkaebi.domain.problem.presentation.dto.response;
+
+import com.ducami.dukkaebi.domain.problem.domain.Problem;
+import com.ducami.dukkaebi.domain.problem.domain.ProblemTestCase;
+import lombok.Builder;
+
+import java.util.List;
+
+@Builder
+public record ProblemDetailRes(
+        String name,
+        String description,
+        String input,
+        String output,
+        String exampleInput,
+        String exampleOutput
+) {
+    public static ProblemDetailRes from(Problem problem, List<ProblemTestCase> testCases) {
+
+        String exampleInput = "";
+        String exampleOutput = "";
+
+        if (testCases != null && !testCases.isEmpty()) {
+            ProblemTestCase first = testCases.getFirst();
+
+            exampleInput = normalize(first.getInput());
+            exampleOutput = normalize(first.getOutput());
+        }
+
+        return new ProblemDetailRes(
+                problem.getName(),
+                problem.getDescription(),
+                problem.getInput(),
+                problem.getOutput(),
+                exampleInput,
+                exampleOutput
+        );
+    }
+
+    private static String normalize(String text) {
+        if (text == null) return "";
+
+        // CRLF → LF 변환 (윈도우 줄바꿈 제거)
+        text = text.replace("\r\n", "\n");
+        // CR → LF 변환 (매킨토시 옛 버전)
+        text = text.replace("\r", "\n");
+
+        // 끝에 줄바꿈이 여러 개 있을 경우 최소한 하나만
+        return text;
+    }
+}
