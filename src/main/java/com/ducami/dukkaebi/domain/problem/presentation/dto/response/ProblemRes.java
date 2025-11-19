@@ -24,14 +24,22 @@ public record ProblemRes (
                 problem.getName(),
                 problem.getDifficulty(),
                 problem.getSolvedCount(),
-                (problem.getSolvedCount()/problem.getAttemptCount()* 1000.0)/10.0,
-                getSolvedResult(history),
+                calculateCorrectRate(problem.getSolvedCount(), problem.getAttemptCount()),                getSolvedResult(history),
                 problem.getAddedAt()
         );
     }
 
     private static SolvedResult getSolvedResult(ProblemHistory problemHistory) {
         return problemHistory != null ? problemHistory.getSolvedResult() : SolvedResult.NOT_SOLVED;
+    }
+
+    private static Double calculateCorrectRate(Integer solvedCount, Integer attemptCount) {
+        if (solvedCount == null || attemptCount == null || attemptCount == 0) {
+            return 0.0;
+        }
+
+        double rate = (double) solvedCount / attemptCount * 100.0;
+        return Math.round(rate * 10.0) / 10.0;
     }
 
 

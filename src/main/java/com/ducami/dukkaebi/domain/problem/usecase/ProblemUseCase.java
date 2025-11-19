@@ -1,6 +1,7 @@
 package com.ducami.dukkaebi.domain.problem.usecase;
 
 import com.ducami.dukkaebi.domain.problem.domain.Problem;
+import com.ducami.dukkaebi.domain.problem.domain.enums.DifficultyType;
 import com.ducami.dukkaebi.domain.problem.error.ProblemErrorCode;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.request.ProblemFilterReq;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemDetailRes;
@@ -35,12 +36,12 @@ public class ProblemUseCase {
         }
     }
 
-    public List<ProblemRes> getProblemWithFilter(ProblemFilterReq filter) {
+    public List<ProblemRes> getProblemWithFilter(DifficultyType difficulty, String time, String correctRate) {
         // Service에서 바로 ProblemRes 리스트 받음
         return problemService.getProblemsWithFilter(
-                filter.difficulty(),
-                filter.time(),
-                filter.correctRate()
+                difficulty,
+                time,
+                correctRate
         );
     }
 
