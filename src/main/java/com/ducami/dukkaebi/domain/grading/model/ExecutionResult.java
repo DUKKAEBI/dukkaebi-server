@@ -1,4 +1,4 @@
-package com.ducami.dukkaebi.domain.grading.service;
+package com.ducami.dukkaebi.domain.grading.model;
 
 public record ExecutionResult(
         String output,
