@@ -1,0 +1,112 @@
+name: CI/CD using github actions & docker
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build-docker-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      # 1. JDK 21 설정
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: 21
+          distribution: 'temurin'
+
+      - name: Set yml file
+        uses: microsoft/variable-substitution@v1
+        with:
+          files: src/main/resources/application.yml
+        env:
+          spring.datasource.url: ${{ secrets.DB_URL}}
+          spring.datasource.username: ${{ secrets.DB_USER }}
+          spring.datasource.password: ${{ secrets.DB_PW }}
+          spring.data.redis.host: ${{ secrets.REDIS_HOST }}
+          spring.data.redis.port: ${{ secrets.REDIS_PORT }}
+          jwt.secretKey: ${{ secrets.SECRET_KEY }}
+          gemini.api-key: ${{ secrets.GEMINI_API_KEY }}
+          gemini.grading-api-key: ${{ secrets.GEMINI_GRADING_API_KEY }}
+
+      # 2. Gradle 캐시 (의존성 빠른 복원)
+      - name: Cache Gradle packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      # 3. Gradle build (조건적으로 테스트 실행)
+      - name: Build with Gradle
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            ./gradlew clean bootJar -x test
+          else
+            ./gradlew clean build
+          fi
+
+      # 4. 빌드된 JAR 확인
+      - name: Check built JAR
+        run: ls -lh build/libs
+
+      # 👇 push일 때만 실행
+      # 5. Docker 이미지 빌드 (캐시 활용)
+      - name: Docker Image Build
+        if: github.event_name == 'push'
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/uga:latest .
+
+      # 6. DockerHub 로그인
+      - name: Docker Login
+        if: github.event_name == 'push'
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # 7. Docker 이미지 푸시
+      - name: Docker Hub Push
+        if: github.event_name == 'push'
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/uga:latest
+
+      # 8. EC2에 배포
+      - name: Deploy to EC2 via SSH
+        if: github.event_name == 'push'
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_KEY }}
+          port: ${{ secrets.EC2_PORT }}
+          script: |
+            CONTAINER_NAME=uga
+            IMAGE_NAME=${{ secrets.DOCKER_USERNAME }}/uga:latest
+
+            echo "${{ secrets.DOCKER_PASSWORD }}" | sudo docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+            if [ "$(sudo docker ps -aq -f name=$CONTAINER_NAME)" ]; then
+              echo "컨테이너 존재함! 중지 후 삭제"
+              sudo docker stop $CONTAINER_NAME
+              sudo docker rm $CONTAINER_NAME
+            fi
+
+            if sudo docker images | grep -q "$IMAGE_NAME"; then
+              echo "이전 이미지 삭제"
+              sudo docker rmi $IMAGE_NAME
+            fi
+
+            echo "불필요한 도커 리소스 정리"
+            sudo docker system prune -af   # --volumes 제거
+
+            sudo docker pull $IMAGE_NAME
+            sudo docker run -d -p 8080:8080 --name $CONTAINER_NAME $IMAGE_NAME
