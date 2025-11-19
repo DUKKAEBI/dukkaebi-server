@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -30,5 +31,11 @@ public class ContestController {
     @Operation(summary = "대회 생성")
     public Response createContest(@RequestBody ContestReq req) {
         return contestUseCase.createContest(req);
+    }
+
+    @PostMapping("/join")
+    @Operation(summary = "대회 참가", description = "대회 코드로 참가")
+    public Response join(@RequestParam String code) {
+        return contestUseCase.joinContest(code);
     }
 }

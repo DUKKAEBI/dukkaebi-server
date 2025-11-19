@@ -8,6 +8,7 @@ import java.util.List;
 
 @Repository
 public interface ContestJpaRepo extends JpaRepository<Contest, String> {
+    boolean existsByCode(String code);
     boolean existsByTitle(String title);
     List<Contest> findAllByOrderByEndDateAsc();
 }

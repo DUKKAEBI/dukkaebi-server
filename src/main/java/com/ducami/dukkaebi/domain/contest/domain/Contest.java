@@ -4,8 +4,6 @@ import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
@@ -14,6 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -40,4 +39,18 @@ public class Contest {
     @ElementCollection
     @CollectionTable(name = "tb_contest_participant")
     private List<Long> participantIds;
+
+    // 참가자 추가 (null 보호 + 중복 방지)
+    public void addParticipant(Long userId) {
+        if (participantIds == null) {
+            participantIds = new ArrayList<>();
+        }
+        if (!participantIds.contains(userId)) {
+            participantIds.add(userId);
+        }
+    }
+
+    public boolean hasParticipant(Long userId) {
+        return participantIds != null && participantIds.contains(userId);
+    }
 }
