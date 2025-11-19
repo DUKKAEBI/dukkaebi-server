@@ -1,7 +1,7 @@
 spring:
   datasource:
     url: ${DB_URL}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    driver-class-name: org.mariadb.jdbc.Driver
     username: ${DB_USER}
     password: ${DB_PW}
 
