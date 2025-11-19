@@ -8,4 +8,5 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RequestMapping("/contest")
 public class ContestController {
+
 }
