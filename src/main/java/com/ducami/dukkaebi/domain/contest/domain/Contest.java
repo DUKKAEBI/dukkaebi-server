@@ -40,7 +40,6 @@ public class Contest {
     @CollectionTable(name = "tb_contest_participant")
     private List<Long> participantIds;
 
-    // 대회 문제 ID 목록
     @ElementCollection
     @CollectionTable(name = "tb_contest_problem")
     private List<Long> problemIds;
