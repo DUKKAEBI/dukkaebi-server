@@ -18,6 +18,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
@@ -34,6 +35,12 @@ public class GeminiService {
 
     private static final String RATE_LIMITER_NAME = "geminiLimiter";
     private static final String RETRY_NAME = "geminiRetry";
+
+    // 최근 메시지 캐시 (간단 TTL)
+    private static final long CACHE_TTL_MS = 5000L; // 5초
+    private final Map<String, CacheEntry> recentCache = new ConcurrentHashMap<>();
+
+    private record CacheEntry(String answer, long ts) {}
 
     private static final String SYSTEM_INSTRUCTION = """
             당신은 '두비'라는 이름의 코딩 학습 도우미 챗봇입니다.
@@ -55,13 +62,19 @@ public class GeminiService {
     @Retry(name = RETRY_NAME)
     public String generateResponse(String userMessage) {
         try {
-            String url = apiUrl + "?key=" + apiKey;
+            // 1. 캐시 조회 (최근 동일 질문 5초 내)
+            CacheEntry cached = recentCache.get(userMessage);
+            long now = System.currentTimeMillis();
+            if (cached != null && (now - cached.ts) < CACHE_TTL_MS) {
+                log.debug("캐시 반환 - 동일 질문 5초 내: {}", userMessage);
+                return cached.answer();
+            }
 
+            String url = apiUrl + "?key=" + apiKey;
             Map<String, Object> requestBody = buildRequestBody(userMessage);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
             ResponseEntity<String> response = restTemplate.exchange(
@@ -71,11 +84,14 @@ public class GeminiService {
                     String.class
             );
 
-            return parseResponse(response.getBody());
+            String answer = parseResponse(response.getBody());
+            recentCache.put(userMessage, new CacheEntry(answer, now));
+            return answer;
 
         } catch (HttpClientErrorException.TooManyRequests e) {
-            log.error("429 Too Many Requests 발생 — Retry 시도 중...");
-            throw e; // Retry가 잡아서 재시도함
+            // 429는 재시도하지 않고 즉시 실패 처리하여 quota 소모 최소화
+            log.error("429 Too Many Requests — 재시도 중단: {}", e.getResponseBodyAsString());
+            throw new CustomException(ChatbotErrorCode.API_CALL_FAILED);
         } catch (HttpClientErrorException e) {
             // 상세 오류 본문 로깅
             log.error("Gemini API 호출 실패: {} - body: {}", e.getStatusCode(), e.getResponseBodyAsString(), e);
