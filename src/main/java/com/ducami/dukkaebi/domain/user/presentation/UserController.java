@@ -1,10 +1,12 @@
 package com.ducami.dukkaebi.domain.user.presentation;
 
+import com.ducami.dukkaebi.domain.user.presentation.dto.response.UserInfoRes;
 import com.ducami.dukkaebi.domain.user.usecase.UserUseCase;
 import com.ducami.dukkaebi.global.common.Response;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,6 +16,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/user")
 public class UserController {
     private final UserUseCase userUseCase;
+
+    @GetMapping
+    @Operation(summary = "마이 페이지")
+    public UserInfoRes getUserInfo() {
+        return userUseCase.getUserInfo();
+    }
 
     @PostMapping("/logout")
     @Operation(summary = "로그아웃", description = "토큰 재사용 불가, 다시 로그인")
