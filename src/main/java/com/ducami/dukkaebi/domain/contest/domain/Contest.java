@@ -22,10 +22,7 @@ import java.util.List;
 @Table(name = "tb_contest")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Contest {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(nullable = false)
+    @Id @Column(nullable = false, unique = true)
     private String code;
 
     @Column(nullable = false)
