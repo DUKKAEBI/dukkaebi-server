@@ -4,6 +4,7 @@ import com.ducami.dukkaebi.global.security.jwt.JwtFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -14,6 +15,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -33,6 +36,7 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(authorize ->
                         authorize
+                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Preflight 허용
                                 .requestMatchers("/auth/**").permitAll()
                                 .requestMatchers("/user/**").authenticated()
                                 .requestMatchers("/chatbot/**").authenticated()
@@ -49,17 +53,25 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration corsConfiguration = new CorsConfiguration();
+        CorsConfiguration cors = new CorsConfiguration();
 
-        corsConfiguration.addAllowedOrigin("http://16.184.32.155:8080");
-        corsConfiguration.addAllowedOrigin("http://localhost:8080");
-        corsConfiguration.addAllowedHeader("*");
-        corsConfiguration.addAllowedMethod("*");
-        corsConfiguration.setAllowCredentials(true);
+        // 개발/배포 환경 도메인/포트 허용 (정확 매칭이 어려우면 패턴 사용)
+        cors.setAllowedOriginPatterns(List.of(
+                "http://localhost:*",
+                "http://127.0.0.1:*",
+                "http://16.184.32.155",
+                "http://16.184.32.155:*",
+                "https://16.184.32.155",
+                "https://16.184.32.155:*"
+        ));
+        cors.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
+        cors.addAllowedHeader("*");
+        cors.setExposedHeaders(List.of("Authorization","Content-Type"));
+        cors.setAllowCredentials(true);
+        cors.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", corsConfiguration);
-
+        source.registerCorsConfiguration("/**", cors);
         return source;
     }
 }
