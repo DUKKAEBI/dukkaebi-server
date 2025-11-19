@@ -11,7 +11,6 @@ import com.ducami.dukkaebi.global.exception.CustomException;
 import com.ducami.dukkaebi.global.security.auth.UserSessionHolder;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -33,7 +32,7 @@ public class ContestUseCase {
         }
 
         String code = codeGenerator.generateCode();
-        while (contestJpaRepo.existsByCode(code)) {
+        while (contestJpaRepo.existsById(code)) {
             code = codeGenerator.generateCode();
         }
 
