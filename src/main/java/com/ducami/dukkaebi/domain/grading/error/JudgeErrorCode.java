@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 @RequiredArgsConstructor
-public enum JudgeError implements CustomErrorCode {
+public enum JudgeErrorCode implements CustomErrorCode {
     JUDGE_FAILED(HttpStatus.BAD_REQUEST, "제출을 실패했습니다.");
 
     private final HttpStatus status;

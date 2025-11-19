@@ -1,5 +1,6 @@
-package com.ducami.dukkaebi.domain.grading.service;
+package com.ducami.dukkaebi.domain.grading.util;
 
+import com.ducami.dukkaebi.domain.grading.model.ExecutionResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -12,7 +13,6 @@ import java.util.concurrent.*;
 @Slf4j
 @Component
 public class CodeExecutor {
-
     private static final String TEMP_DIR = System.getProperty("java.io.tmpdir");
 
     /**

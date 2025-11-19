@@ -35,4 +35,11 @@ public class User {
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private UserType role;
+
+    @Column(nullable = false)
+    private int score;
+
+    public void addScore(int amount) {
+        this.score += amount;
+    }
 }
