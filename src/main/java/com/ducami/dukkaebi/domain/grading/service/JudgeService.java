@@ -11,6 +11,7 @@ import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemTestCaseJpaRepo;
 import com.ducami.dukkaebi.domain.problem.domain.enums.DifficultyType;
 import com.ducami.dukkaebi.domain.user.domain.User;
 import com.ducami.dukkaebi.domain.user.domain.repo.UserJpaRepo;
+import com.ducami.dukkaebi.domain.user.service.UserActivityService;
 import com.ducami.dukkaebi.global.security.auth.UserSessionHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ public class JudgeService {
     private final CodeExecutor codeExecutor;
     private final UserSessionHolder userSessionHolder;
     private final UserJpaRepo userJpaRepo;
+    private final UserActivityService userActivityService; // 추가
 
     /**
      * 백준 스타일 코드 채점
@@ -139,13 +141,14 @@ public class JudgeService {
             int reward = difficultyToScore(problem.getDifficulty());
             try {
                 User sessionUser = userSessionHolder.getUser();
-                // 영속 엔티티로 다시 조회해 업데이트
                 User user = userJpaRepo.findById(sessionUser.getId())
                         .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
                 user.addScore(reward);
-                log.info("점수 부여 - userId: {}, +{}점 (난이도: {}), 총점: {}", user.getId(), reward, problem.getDifficulty(), user.getScore());
+                // 일일 활동 1 증가 (정답 1건)
+                userActivityService.increaseTodaySolvedCount(1);
+                log.info("점수/활동 갱신 - userId: {}, +{}점, 오늘 푼 문제 +1", user.getId(), reward);
             } catch (Exception e) {
-                log.error("점수 부여 실패: {}", e.getMessage(), e);
+                log.error("점수/활동 갱신 실패: {}", e.getMessage(), e);
             }
         }
 
