@@ -22,7 +22,7 @@ public class ProblemController {
         return problemUseCase.getProblem();
     }
 
-    @GetMapping
+    @GetMapping("/filter")
     @Operation(summary = "문제 필터링")
     public List<ProblemRes> getProblems(@RequestBody ProblemFilterReq filter) {
         return problemUseCase.getProblemWithFilter(filter);
