@@ -105,23 +105,34 @@ public class CodeExecutor {
         File tempFile = null;
 
         try {
+            // 코드 정규화
             code = normalizeCode(code);
 
             // 1. 임시 파일 생성
             tempFile = File.createTempFile("judge_", ".py");
             Files.writeString(tempFile.toPath(), code, StandardCharsets.UTF_8);
 
-            // 2. 실행
-            ProcessBuilder pb = new ProcessBuilder("python3", tempFile.getAbsolutePath());
+            // 2. Python 실행 경로 찾기
+            String pythonCommand = findPythonCommand();
+            if (pythonCommand == null) {
+                return new ExecutionResult("",
+                        "Python이 설치되어 있지 않습니다. python3 또는 python을 설치해주세요.",
+                        false, false);
+            }
+
+            log.info("Python 실행 명령어: {}", pythonCommand);
+
+            // 3. 실행
+            ProcessBuilder pb = new ProcessBuilder(pythonCommand, tempFile.getAbsolutePath());
             Process process = pb.start();
 
-            // 3. 입력 전달
+            // 4. 입력 전달
             try (OutputStream os = process.getOutputStream()) {
                 os.write(input.getBytes(StandardCharsets.UTF_8));
                 os.flush();
             }
 
-            // 4. 타임아웃과 함께 결과 대기
+            // 5. 타임아웃과 함께 결과 대기
             boolean finished = process.waitFor(timeoutMs, TimeUnit.MILLISECONDS);
 
             if (!finished) {
@@ -129,7 +140,7 @@ public class CodeExecutor {
                 return new ExecutionResult("", "시간 초과", false, true);
             }
 
-            // 5. 출력 읽기
+            // 6. 출력 읽기
             String output = readStream(process.getInputStream());
             String error = readStream(process.getErrorStream());
 
@@ -229,6 +240,29 @@ public class CodeExecutor {
             }
             return sb.toString();
         }
+    }
+
+    private String findPythonCommand() {
+        String[] commands = {"python3", "python", "py"};
+
+        for (String cmd : commands) {
+            try {
+                ProcessBuilder pb = new ProcessBuilder(cmd, "--version");
+                Process process = pb.start();
+                boolean finished = process.waitFor(2, TimeUnit.SECONDS);
+
+                if (finished && process.exitValue() == 0) {
+                    String version = readStream(process.getInputStream());
+                    log.info("Python 발견: {} - {}", cmd, version.trim());
+                    return cmd;
+                }
+            } catch (Exception e) {
+                log.debug("{} 명령어를 찾을 수 없음", cmd);
+            }
+        }
+
+        log.error("사용 가능한 Python 명령어를 찾을 수 없습니다.");
+        return null;
     }
 
     /**

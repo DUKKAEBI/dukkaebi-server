@@ -1,5 +1,6 @@
 package com.ducami.dukkaebi.domain.problem.presentation;
 
+import com.ducami.dukkaebi.domain.problem.domain.enums.DifficultyType;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.request.ProblemFilterReq;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemDetailRes;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemRes;
@@ -24,8 +25,12 @@ public class ProblemController {
 
     @GetMapping("/filter")
     @Operation(summary = "문제 필터링")
-    public List<ProblemRes> getProblems(@RequestBody ProblemFilterReq filter) {
-        return problemUseCase.getProblemWithFilter(filter);
+    public List<ProblemRes> getProblems(
+            @RequestParam(required = false) DifficultyType difficulty,
+            @RequestParam(required = false) String time,
+            @RequestParam(required = false) String correctRate
+    ) {
+        return problemUseCase.getProblemWithFilter(difficulty, time, correctRate);
     }
 
     @GetMapping("/search")
