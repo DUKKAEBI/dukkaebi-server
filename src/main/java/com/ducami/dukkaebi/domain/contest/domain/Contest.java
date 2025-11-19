@@ -40,6 +40,11 @@ public class Contest {
     @CollectionTable(name = "tb_contest_participant")
     private List<Long> participantIds;
 
+    // 대회 문제 ID 목록
+    @ElementCollection
+    @CollectionTable(name = "tb_contest_problem")
+    private List<Long> problemIds;
+
     // 참가자 추가 (null 보호 + 중복 방지)
     public void addParticipant(Long userId) {
         if (participantIds == null) {

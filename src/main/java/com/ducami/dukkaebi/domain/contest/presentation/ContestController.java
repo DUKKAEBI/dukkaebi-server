@@ -1,30 +1,34 @@
 package com.ducami.dukkaebi.domain.contest.presentation;
 
 import com.ducami.dukkaebi.domain.contest.presentation.dto.request.ContestReq;
+import com.ducami.dukkaebi.domain.contest.presentation.dto.response.ContestDetailRes;
 import com.ducami.dukkaebi.domain.contest.presentation.dto.response.ContestListRes;
 import com.ducami.dukkaebi.domain.contest.usecase.ContestUseCase;
 import com.ducami.dukkaebi.global.common.Response;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/contest")
+@Tag(name = "Contest")
 public class ContestController {
     private final ContestUseCase contestUseCase;
 
     @GetMapping("/list")
-    @Operation(summary = "대회 목록 조회")
+    @Operation(summary = "대회 목록")
     public List<ContestListRes> getContestList() {
         return contestUseCase.getContestList();
+    }
+
+    @GetMapping("/{code}")
+    @Operation(summary = "대회 상세 조회")
+    public ContestDetailRes getContestDetail(@PathVariable String code) {
+        return contestUseCase.getContestDetail(code);
     }
 
     @PostMapping("/create")
@@ -33,9 +37,9 @@ public class ContestController {
         return contestUseCase.createContest(req);
     }
 
-    @PostMapping("/join")
+    @PostMapping("/{code}/join")
     @Operation(summary = "대회 참가", description = "대회 코드로 참가")
-    public Response join(@RequestParam String code) {
+    public Response join(@PathVariable String code) {
         return contestUseCase.joinContest(code);
     }
 }
