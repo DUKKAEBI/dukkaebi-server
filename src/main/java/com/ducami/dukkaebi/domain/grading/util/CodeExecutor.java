@@ -21,13 +21,12 @@ public class CodeExecutor {
     public ExecutionResult execute(String code, String language, String input, long timeoutMs) {
         log.info("코드 실행 시작 - language: {}", language);
 
-        if ("java".equalsIgnoreCase(language)) {
-            return executeJava(code, input, timeoutMs);
-        } else if ("python".equalsIgnoreCase(language)) {
-            return executePython(code, input, timeoutMs);
-        } else {
-            return new ExecutionResult("", "지원하지 않는 언어입니다.", false, false);
-        }
+        return switch (language.toLowerCase()) {
+            case "java" -> executeJava(code, input, timeoutMs);
+            case "python", "python3" -> executePython(code, input, timeoutMs);
+            case "cpp", "c++" -> executeCpp(code, input, timeoutMs);
+            default -> new ExecutionResult("", "지원하지 않는 언어입니다: " + language, false, false);
+        };
     }
 
     /**
@@ -37,6 +36,8 @@ public class CodeExecutor {
         Path tempDir = null;
 
         try {
+            code = normalizeCode(code);
+
             // 1. 임시 디렉토리 생성
             tempDir = Files.createTempDirectory("judge_");
 
@@ -104,6 +105,8 @@ public class CodeExecutor {
         File tempFile = null;
 
         try {
+            code = normalizeCode(code);
+
             // 1. 임시 파일 생성
             tempFile = File.createTempFile("judge_", ".py");
             Files.writeString(tempFile.toPath(), code, StandardCharsets.UTF_8);
@@ -144,6 +147,76 @@ public class CodeExecutor {
     }
 
     /**
+     * C++ 코드 실행
+     */
+    private ExecutionResult executeCpp(String code, String input, long timeoutMs) {
+        Path tempDir = null;
+
+        try {
+            code = normalizeCode(code);
+
+            // 1. 임시 디렉토리 생성
+            tempDir = Files.createTempDirectory("judge_");
+
+            // 2. main.cpp 파일 생성
+            Path cppFile = tempDir.resolve("main.cpp");
+            Files.writeString(cppFile, code, StandardCharsets.UTF_8);
+
+            // 3. 컴파일
+            Path exeFile = tempDir.resolve("main");
+            ProcessBuilder compileBuilder = new ProcessBuilder(
+                    "g++", "-o", exeFile.toString(), cppFile.toString(), "-std=c++17"
+            );
+            compileBuilder.directory(tempDir.toFile());
+            Process compileProcess = compileBuilder.start();
+
+            boolean compileFinished = compileProcess.waitFor(10, TimeUnit.SECONDS);
+
+            if (!compileFinished || compileProcess.exitValue() != 0) {
+                String compileError = readStream(compileProcess.getErrorStream());
+                return new ExecutionResult("", "컴파일 에러: " + compileError, false, false);
+            }
+
+            // 4. 실행
+            ProcessBuilder runBuilder = new ProcessBuilder(exeFile.toString());
+            runBuilder.directory(tempDir.toFile());
+            Process runProcess = runBuilder.start();
+
+            // 5. 입력 전달
+            try (OutputStream os = runProcess.getOutputStream()) {
+                os.write(input.getBytes(StandardCharsets.UTF_8));
+                os.flush();
+            }
+
+            // 6. 타임아웃과 함께 결과 대기
+            boolean finished = runProcess.waitFor(timeoutMs, TimeUnit.MILLISECONDS);
+
+            if (!finished) {
+                runProcess.destroyForcibly();
+                return new ExecutionResult("", "시간 초과", false, true);
+            }
+
+            // 7. 출력 읽기
+            String output = readStream(runProcess.getInputStream());
+            String error = readStream(runProcess.getErrorStream());
+
+            boolean success = runProcess.exitValue() == 0;
+
+            return new ExecutionResult(output, error, success, false);
+
+        } catch (Exception e) {
+            log.error("C++ 실행 중 예외: {}", e.getMessage(), e);
+            return new ExecutionResult("", "실행 에러: " + e.getMessage(), false, false);
+
+        } finally {
+            // 임시 파일 정리
+            if (tempDir != null) {
+                deleteDirectory(tempDir.toFile());
+            }
+        }
+    }
+
+    /**
      * InputStream을 String으로 변환
      */
     private String readStream(InputStream is) throws IOException {
@@ -175,6 +248,20 @@ public class CodeExecutor {
             }
             directory.delete();
         }
+    }
+
+    /**
+     * 코드 문자열 정규화 (이스케이프 시퀀스 처리)
+     */
+    private String normalizeCode(String code) {
+        if (code == null) return "";
+
+        return code
+                .replace("\\n", "\n")      // \n을 실제 줄바꿈으로
+                .replace("\\t", "\t")      // \t를 실제 탭으로
+                .replace("\\r", "\r")      // \r을 실제 캐리지 리턴으로
+                .replace("\\\"", "\"")     // \" 처리
+                .replace("\\\\'", "'");    // \' 처리
     }
 }
 
