@@ -10,6 +10,11 @@ spring:
       ddl-auto: update
     show-sql: true
 
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+
 jwt:
   secretKey: ${SECRET_KEY}
   refreshExp: 604800000 # 1week
@@ -17,7 +22,7 @@ jwt:
 
 gemini:
   api-key: ${GEMINI_API_KEY}
-  grading-api-key : ${GEMINI_GRADING_API_KEY}
+  grading-api-key: ${GEMINI_GRADING_API_KEY}
   api-url: https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent
 #  api-url: https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent
 
