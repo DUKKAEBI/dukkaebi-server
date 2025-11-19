@@ -44,6 +44,9 @@ dependencies {
 	// MySQL Driver
 	runtimeOnly 'com.mysql:mysql-connector-j'
 
+	// Maria Driver
+	runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+
 	// JWT (JSON Web Token)
 	implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
 	implementation 'io.jsonwebtoken:jjwt-impl:0.12.6'
