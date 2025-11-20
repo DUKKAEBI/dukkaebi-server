@@ -36,10 +36,9 @@ public class GeminiService {
     private static final String RATE_LIMITER_NAME = "geminiLimiter";
     private static final String RETRY_NAME = "geminiRetry";
 
-    // 최근 메시지 캐시 (간단 TTL)
+    // 최근 메시지 캐시 (TTL)
     private static final long CACHE_TTL_MS = 5000L; // 5초
     private final Map<String, CacheEntry> recentCache = new ConcurrentHashMap<>();
-
     private record CacheEntry(String answer, long ts) {}
 
     private static final String SYSTEM_INSTRUCTION = """
@@ -59,14 +58,14 @@ public class GeminiService {
             """;
 
     @RateLimiter(name = RATE_LIMITER_NAME)
-    @Retry(name = RETRY_NAME)
+    @Retry(name = RETRY_NAME, fallbackMethod = "fallbackResponse")
     public String generateResponse(String userMessage) {
         try {
-            // 1. 캐시 조회 (최근 동일 질문 5초 내)
+            // 1. 캐시 조회
             CacheEntry cached = recentCache.get(userMessage);
             long now = System.currentTimeMillis();
             if (cached != null && (now - cached.ts) < CACHE_TTL_MS) {
-                log.debug("캐시 반환 - 동일 질문 5초 내: {}", userMessage);
+                log.debug("캐시 반환: {}", userMessage);
                 return cached.answer();
             }
 
@@ -78,10 +77,7 @@ public class GeminiService {
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
             ResponseEntity<String> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.POST,
-                    entity,
-                    String.class
+                    url, HttpMethod.POST, entity, String.class
             );
 
             String answer = parseResponse(response.getBody());
@@ -89,11 +85,9 @@ public class GeminiService {
             return answer;
 
         } catch (HttpClientErrorException.TooManyRequests e) {
-            // 429는 재시도하지 않고 즉시 실패 처리하여 quota 소모 최소화
-            log.error("429 Too Many Requests — 재시도 중단: {}", e.getResponseBodyAsString());
-            throw new CustomException(ChatbotErrorCode.API_CALL_FAILED);
+            log.warn("429 Too Many Requests, 잠시 대기 후 재시도: {}", e.getResponseBodyAsString());
+            throw e; // Retry가 처리하도록 예외 재던짐
         } catch (HttpClientErrorException e) {
-            // 상세 오류 본문 로깅
             log.error("Gemini API 호출 실패: {} - body: {}", e.getStatusCode(), e.getResponseBodyAsString(), e);
             throw new CustomException(ChatbotErrorCode.API_CALL_FAILED);
         } catch (Exception e) {
@@ -102,25 +96,31 @@ public class GeminiService {
         }
     }
 
+    // Retry 실패시 fallback
+    private String fallbackResponse(String userMessage, Throwable t) {
+        log.error("Gemini API 재시도 실패, fallback 처리: {}", t.getMessage(), t);
+        return "죄송하지만 현재 서버가 바쁘거나 요청량이 많아 답변을 제공할 수 없습니다. 잠시 후 다시 시도해주세요.";
+    }
+
     private Map<String, Object> buildRequestBody(String userMessage) {
         Map<String, Object> body = new HashMap<>();
 
-        // 1. 시스템 지시문 설정
-        Map<String, Object> instructionContent = new HashMap<>();
-        instructionContent.put("role", "user");
-        instructionContent.put("parts", List.of(Map.of("text", SYSTEM_INSTRUCTION)));
+        Map<String, Object> instructionContent = Map.of(
+                "role", "user",
+                "parts", List.of(Map.of("text", SYSTEM_INSTRUCTION))
+        );
 
-        // 2. 사용자 메시지 설정
-        Map<String, Object> userContent = new HashMap<>();
-        userContent.put("role", "user");
-        userContent.put("parts", List.of(Map.of("text", userMessage)));
+        Map<String, Object> userContent = Map.of(
+                "role", "user",
+                "parts", List.of(Map.of("text", userMessage))
+        );
 
         body.put("contents", List.of(instructionContent, userContent));
 
-        // 3. 생성 설정
-        Map<String, Object> generationConfig = new HashMap<>();
-        generationConfig.put("temperature", 0.7);
-        generationConfig.put("maxOutputTokens", 1000);
+        Map<String, Object> generationConfig = Map.of(
+                "temperature", 0.7,
+                "maxOutputTokens", 1000
+        );
         body.put("generationConfig", generationConfig);
 
         return body;
@@ -135,12 +135,7 @@ public class GeminiService {
                 throw new CustomException(ChatbotErrorCode.EMPTY_RESPONSE);
             }
 
-            String text = candidates.get(0)
-                    .path("content")
-                    .path("parts")
-                    .get(0)
-                    .path("text")
-                    .asText();
+            String text = candidates.get(0).path("content").path("parts").get(0).path("text").asText();
 
             if (text == null || text.isBlank()) {
                 throw new CustomException(ChatbotErrorCode.EMPTY_RESPONSE);
