@@ -6,7 +6,6 @@ import com.ducami.dukkaebi.domain.contest.presentation.dto.response.ContestListR
 import com.ducami.dukkaebi.domain.contest.usecase.ContestUseCase;
 import com.ducami.dukkaebi.global.common.Response;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,7 +14,6 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/contest")
-@Tag(name = "Contest")
 public class ContestController {
     private final ContestUseCase contestUseCase;
 

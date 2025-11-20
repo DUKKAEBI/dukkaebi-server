@@ -1,7 +1,6 @@
 package com.ducami.dukkaebi.domain.problem.presentation;
 
 import com.ducami.dukkaebi.domain.problem.domain.enums.DifficultyType;
-import com.ducami.dukkaebi.domain.problem.presentation.dto.request.ProblemFilterReq;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemDetailRes;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemRes;
 import com.ducami.dukkaebi.domain.problem.usecase.ProblemUseCase;
