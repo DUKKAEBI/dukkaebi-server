@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public record ContestReq(
-        String code,
         String title,
         String description,
         LocalDate startDate,
