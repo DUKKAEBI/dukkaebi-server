@@ -57,12 +57,14 @@ public class SecurityConfig {
 
         // 개발/배포 환경 도메인/포트 허용 (정확 매칭이 어려우면 패턴 사용)
         cors.setAllowedOriginPatterns(List.of(
+
                 "http://localhost:*",
                 "http://127.0.0.1:*",
                 "http://16.184.32.155",
                 "http://16.184.32.155:*",
                 "https://16.184.32.155",
-                "https://16.184.32.155:*"
+                "https://16.184.32.155:*",
+                "https://dukkaebi.netlify.app"
         ));
         cors.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
         cors.addAllowedHeader("*");
