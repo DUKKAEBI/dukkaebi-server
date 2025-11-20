@@ -60,10 +60,7 @@ public class SecurityConfig {
 
                 "http://localhost:*",
                 "http://127.0.0.1:*",
-                "http://16.184.32.155",
-                "http://16.184.32.155:*",
-                "https://16.184.32.155",
-                "https://16.184.32.155:*",
+                "https://dukkaebi.o-r.kr",
                 "https://dukkaebi.netlify.app"
         ));
         cors.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
