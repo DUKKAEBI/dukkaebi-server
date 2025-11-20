@@ -5,6 +5,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -37,11 +38,11 @@ public class Contest {
     private LocalDate endDate;
 
     @ElementCollection
-    @CollectionTable(name = "tb_contest_participant")
+    @CollectionTable(name = "tb_contest_participant", joinColumns = @JoinColumn(name = "contest_id", referencedColumnName = "code"))
     private List<Long> participantIds;
 
     @ElementCollection
-    @CollectionTable(name = "tb_contest_problem")
+    @CollectionTable(name = "tb_contest_problem", joinColumns = @JoinColumn(name = "contest_id", referencedColumnName = "code"))
     private List<Long> problemIds;
 
     // 참가자 추가 (null 보호 + 중복 방지)
