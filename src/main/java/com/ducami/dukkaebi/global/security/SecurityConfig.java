@@ -61,7 +61,7 @@ public class SecurityConfig {
                 "http://localhost:*",
                 "http://127.0.0.1:*",
                 "https://dukkaebi.o-r.kr",
-                "https://dukkaebi.netlify.app"
+                "https://dukkaebi.vercel.app/"
         ));
         cors.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
         cors.addAllowedHeader("*");
