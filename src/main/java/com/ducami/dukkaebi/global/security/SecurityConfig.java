@@ -42,6 +42,8 @@ public class SecurityConfig {
                                 .requestMatchers("/chatbot/**").authenticated()
                                 .requestMatchers("/grading/**").authenticated()
                                 .requestMatchers("/problems/**").authenticated()
+                                .requestMatchers("/course/**").authenticated()
+                                .requestMatchers("/admin/**").hasRole("ADMIN")
                                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/api-docs").permitAll()
                                 .anyRequest().permitAll()
                 )
