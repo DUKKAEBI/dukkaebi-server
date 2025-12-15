@@ -1,6 +1,7 @@
 package com.ducami.dukkaebi.global.security;
 
 import com.ducami.dukkaebi.global.security.jwt.JwtFilter;
+import com.ducami.dukkaebi.global.security.jwt.handler.JwtAccessDeniedHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -49,7 +50,10 @@ public class SecurityConfig {
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(exceptionHandling ->
-                        exceptionHandling.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                        exceptionHandling
+                                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                                .accessDeniedHandler(new JwtAccessDeniedHandler())
+                )
                 .build();
     }
 
