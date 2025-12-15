@@ -1,0 +1,59 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    driver-class-name: org.mariadb.jdbc.Driver
+    username: ${DB_USER}
+    password: ${DB_PW}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+
+jwt:
+  secretKey: ${SECRET_KEY}
+  refreshExp: 604800000 # 1week
+  accessExp: 6000000 # 2hour
+
+gemini:
+  api-key: ${GEMINI_API_KEY}
+  grading-api-key: ${GEMINI_GRADING_API_KEY}
+  api-url: https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent
+
+resilience4j:
+  ratelimiter:
+    instances:
+      geminiLimiter:
+        limit-refresh-period: 1s   # 1초마다 리밋 초기화
+        limit-for-period: 3        # 초당 최대 3회 요청
+        timeout-duration: 500ms    # 제한 초과 시 0.5초 기다림 후 예외 발생
+
+  retry:
+    instances:
+      geminiRetry:
+        max-attempts: 3            # 최대 3회 재시도
+        wait-duration: 1s          # 재시도 전 대기 1초
+        retry-exceptions:
+          - org.springframework.web.client.HttpClientErrorException$TooManyRequests
+        exponential-backoff-multiplier: 2  # 지수 백오프 적용
+
+springdoc:
+  api-docs:
+    enabled: true
+    version: openapi_3_0
+    path: /v3/api-docs
+
+  default-consumes-media-type: application/json
+  auto-tag-classes: true
+  groups:
+    enabled: false
+
+  swagger-ui:
+    tags-sorter: alpha
+    operationsSorter: alpha
+    path: /swagger-ui/index.html
