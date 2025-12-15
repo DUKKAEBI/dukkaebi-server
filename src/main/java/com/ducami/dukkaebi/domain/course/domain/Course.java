@@ -1,7 +1,9 @@
 package com.ducami.dukkaebi.domain.course.domain;
 
 import com.ducami.dukkaebi.domain.course.domain.enums.LevelType;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -35,6 +37,10 @@ public class Course {
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private LevelType level;
+
+    @ElementCollection
+    @CollectionTable(name = "tb_course_problem")
+    private List<Long> problemIds;
 
     public void updateCourse(String title, String description, List<String> keywords, LevelType level) {
         this.title = title;

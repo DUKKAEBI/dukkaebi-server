@@ -4,16 +4,46 @@ import com.ducami.dukkaebi.domain.course.domain.Course;
 import com.ducami.dukkaebi.domain.course.domain.repo.CourseJpaRepo;
 import com.ducami.dukkaebi.domain.course.error.CourseErrorCode;
 import com.ducami.dukkaebi.domain.course.presentation.dto.request.CourseReq;
+import com.ducami.dukkaebi.domain.course.presentation.dto.response.CourseDetailRes;
+import com.ducami.dukkaebi.domain.course.presentation.dto.response.CourseListRes;
+import com.ducami.dukkaebi.domain.problem.domain.Problem;
+import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemJpaRepo;
+import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemRes;
 import com.ducami.dukkaebi.global.common.Response;
 import com.ducami.dukkaebi.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
-public class CourseAdminUseCase {
+public class CourseUseCase {
     private final CourseJpaRepo courseJpaRepo;
+    private final ProblemJpaRepo problemJpaRepo;
+
+    @Transactional(readOnly = true)
+    public List<CourseListRes> getCourseList() {
+        return courseJpaRepo.findAll().stream()
+                .map(CourseListRes::from)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public CourseDetailRes getCourseDetail(Long courseId) {
+        Course course = courseJpaRepo.findById(courseId)
+                .orElseThrow(() -> new CustomException(CourseErrorCode.COURSE_NOT_FOUND));
+
+        List<Long> problemIds = course.getProblemIds();
+        List<ProblemRes> problems = problemIds == null || problemIds.isEmpty()
+                ? List.of()
+                : problemJpaRepo.findAllById(problemIds).stream()
+                .map((Problem p) -> ProblemRes.from(p, null))
+                .toList();
+
+        return CourseDetailRes.from(course, problems);
+    }
 
     @Transactional
     public Response createCourse(CourseReq req) {
