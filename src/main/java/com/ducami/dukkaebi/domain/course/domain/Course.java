@@ -10,12 +10,14 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -41,13 +43,30 @@ public class Course {
     private LevelType level;
 
     @ElementCollection
-    @CollectionTable(name = "tb_course_problem")
+    @CollectionTable(name = "tb_course_problem", joinColumns = @JoinColumn(name = "course_id"))
     private List<Long> problemIds;
+
+    @ElementCollection
+    @CollectionTable(name = "tb_course_participant", joinColumns = @JoinColumn(name = "course_id"))
+    private List<Long> participantIds;
 
     public void updateCourse(String title, String description, List<String> keywords, LevelType level) {
         this.title = title;
         this.description = description;
         this.keywords = keywords;
         this.level = level;
+    }
+
+    public void addParticipant(Long userId) {
+        if (participantIds == null) {
+            participantIds = new ArrayList<>();
+        }
+        if (!participantIds.contains(userId)) {
+            participantIds.add(userId);
+        }
+    }
+
+    public boolean hasParticipant(Long userId) {
+        return participantIds != null && participantIds.contains(userId);
     }
 }

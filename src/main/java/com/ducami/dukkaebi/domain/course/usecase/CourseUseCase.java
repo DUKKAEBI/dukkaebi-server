@@ -13,6 +13,8 @@ import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemJpaRepo;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemRes;
 import com.ducami.dukkaebi.global.common.Response;
 import com.ducami.dukkaebi.global.exception.CustomException;
+import com.ducami.dukkaebi.domain.course.domain.enums.CourseStatus;
+import com.ducami.dukkaebi.global.security.auth.UserSessionHolder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +27,7 @@ public class CourseUseCase {
     private final CourseJpaRepo courseJpaRepo;
     private final ProblemJpaRepo problemJpaRepo;
     private final CourseProgressService courseProgressService;
+    private final UserSessionHolder userSessionHolder;
 
     @Transactional(readOnly = true)
     public List<CourseListRes> getCourseList() {
@@ -83,21 +86,54 @@ public class CourseUseCase {
         return Response.ok("코스가 성공적으로 삭제되었습니다.");
     }
 
-    // 학생: 진행 중 코스 목록 (progressPercent < 100)
+    // 학생: 코스 수강 신청
+    @Transactional
+    public Response joinCourse(Long courseId) {
+        Course course = courseJpaRepo.findById(courseId)
+                .orElseThrow(() -> new CustomException(CourseErrorCode.COURSE_NOT_FOUND));
+
+        Long userId = userSessionHolder.getUserId();
+        course.addParticipant(userId);
+
+        return Response.ok("코스 수강 신청이 완료되었습니다.");
+    }
+
+    // 학생: 진행 중 코스 목록 (IN_PROGRESS)
     @Transactional(readOnly = true)
     public List<CourseStudentItemRes> getInProgressCourses() {
         return courseJpaRepo.findAll().stream()
-                .map(c -> CourseStudentItemRes.from(c, courseProgressService.calculateProgressPercent(c)))
-                .filter(item -> item.progressPercent() < 100)
+                .map(c -> {
+                    int progress = courseProgressService.calculateProgressPercent(c);
+                    CourseStatus status = courseProgressService.calculateCourseStatus(c);
+                    return CourseStudentItemRes.from(c, progress, status);
+                })
+                .filter(item -> item.status() == CourseStatus.IN_PROGRESS)
                 .toList();
     }
 
-    // 학생: 완료 코스 목록 (progressPercent >= 100)
+    // 학생: 완료 코스 목록 (COMPLETED)
     @Transactional(readOnly = true)
     public List<CourseStudentItemRes> getCompletedCourses() {
         return courseJpaRepo.findAll().stream()
-                .map(c -> CourseStudentItemRes.from(c, courseProgressService.calculateProgressPercent(c)))
-                .filter(item -> item.progressPercent() >= 100)
+                .map(c -> {
+                    int progress = courseProgressService.calculateProgressPercent(c);
+                    CourseStatus status = courseProgressService.calculateCourseStatus(c);
+                    return CourseStudentItemRes.from(c, progress, status);
+                })
+                .filter(item -> item.status() == CourseStatus.COMPLETED)
+                .toList();
+    }
+
+    // 학생: 수강 가능한 코스 목록 (NOT_STARTED)
+    @Transactional(readOnly = true)
+    public List<CourseStudentItemRes> getJoinableCourses() {
+        return courseJpaRepo.findAll().stream()
+                .map(c -> {
+                    int progress = courseProgressService.calculateProgressPercent(c);
+                    CourseStatus status = courseProgressService.calculateCourseStatus(c);
+                    return CourseStudentItemRes.from(c, progress, status);
+                })
+                .filter(item -> item.status() == CourseStatus.NOT_STARTED)
                 .toList();
     }
 }

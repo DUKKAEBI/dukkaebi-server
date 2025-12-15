@@ -1,6 +1,7 @@
 package com.ducami.dukkaebi.domain.course.service;
 
 import com.ducami.dukkaebi.domain.course.domain.Course;
+import com.ducami.dukkaebi.domain.course.domain.enums.CourseStatus;
 import com.ducami.dukkaebi.domain.problem.domain.ProblemHistory;
 import com.ducami.dukkaebi.domain.problem.domain.enums.SolvedResult;
 import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemHistoryJpaRepo;
@@ -35,5 +36,19 @@ public class CourseProgressService {
         }
         return (int) Math.round((solvedCount * 100.0) / problemIds.size());
     }
-}
 
+    // 코스 상태 계산: 수강 여부 + 진행도 기반
+    @Transactional(readOnly = true)
+    public CourseStatus calculateCourseStatus(Course course) {
+        Long userId = userSessionHolder.getUserId();
+
+        // 수강 신청 안 함
+        if (!course.hasParticipant(userId)) {
+            return CourseStatus.NOT_STARTED;
+        }
+
+        // 수강 중 - 진행도로 판단
+        int progress = calculateProgressPercent(course);
+        return progress >= 100 ? CourseStatus.COMPLETED : CourseStatus.IN_PROGRESS;
+    }
+}
