@@ -35,4 +35,11 @@ public class Course {
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private LevelType level;
+
+    public void updateCourse(String title, String description, List<String> keywords, LevelType level) {
+        this.title = title;
+        this.description = description;
+        this.keywords = keywords;
+        this.level = level;
+    }
 }

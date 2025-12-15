@@ -9,7 +9,7 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum CourseErrorCode implements CustomErrorCode {
     TITLE_ALREADY(HttpStatus.CONFLICT, "이미 존재하는 대회명입니다."),
-    COURSE_ERROR_CODE(HttpStatus.NOT_FOUND, "해당 코스를 찾을 수 없습니다.");
+    COURSE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 코스를 찾을 수 없습니다.");
 
     private final HttpStatus status;
     private final String message;
