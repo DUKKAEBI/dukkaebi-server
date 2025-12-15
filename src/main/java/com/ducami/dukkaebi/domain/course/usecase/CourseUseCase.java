@@ -7,15 +7,12 @@ import com.ducami.dukkaebi.domain.course.presentation.dto.request.CourseReq;
 import com.ducami.dukkaebi.domain.course.presentation.dto.response.CourseDetailRes;
 import com.ducami.dukkaebi.domain.course.presentation.dto.response.CourseListRes;
 import com.ducami.dukkaebi.domain.course.presentation.dto.response.CourseStudentItemRes;
+import com.ducami.dukkaebi.domain.course.service.CourseProgressService;
 import com.ducami.dukkaebi.domain.problem.domain.Problem;
 import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemJpaRepo;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemRes;
-import com.ducami.dukkaebi.domain.problem.domain.ProblemHistory;
-import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemHistoryJpaRepo;
-import com.ducami.dukkaebi.domain.problem.domain.enums.SolvedResult;
 import com.ducami.dukkaebi.global.common.Response;
 import com.ducami.dukkaebi.global.exception.CustomException;
-import com.ducami.dukkaebi.global.security.auth.UserSessionHolder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,9 +24,7 @@ import java.util.List;
 public class CourseUseCase {
     private final CourseJpaRepo courseJpaRepo;
     private final ProblemJpaRepo problemJpaRepo;
-    // 학생 진행도 계산을 위한 의존성 추가
-    private final ProblemHistoryJpaRepo problemHistoryJpaRepo;
-    private final UserSessionHolder userSessionHolder;
+    private final CourseProgressService courseProgressService;
 
     @Transactional(readOnly = true)
     public List<CourseListRes> getCourseList() {
@@ -88,30 +83,11 @@ public class CourseUseCase {
         return Response.ok("코스가 성공적으로 삭제되었습니다.");
     }
 
-    // 학생 진행 퍼센트 계산: SOLVED 개수 / 전체 문제 수 * 100
-    @Transactional(readOnly = true)
-    public int calculateProgressPercent(Course course) {
-        List<Long> problemIds = course.getProblemIds();
-        if (problemIds == null || problemIds.isEmpty()) return 0;
-
-        Long userId = userSessionHolder.getUserId();
-        List<ProblemHistory> histories = problemHistoryJpaRepo.findByUser_Id(userId);
-
-        int solvedCount = 0;
-        for (ProblemHistory h : histories) {
-            Long pid = h.getProblem().getProblemId();
-            if (problemIds.contains(pid) && h.getSolvedResult() == SolvedResult.SOLVED) {
-                solvedCount++;
-            }
-        }
-        return (int) Math.round((solvedCount * 100.0) / problemIds.size());
-    }
-
     // 학생: 진행 중 코스 목록 (progressPercent < 100)
     @Transactional(readOnly = true)
     public List<CourseStudentItemRes> getInProgressCourses() {
         return courseJpaRepo.findAll().stream()
-                .map(c -> CourseStudentItemRes.from(c, calculateProgressPercent(c)))
+                .map(c -> CourseStudentItemRes.from(c, courseProgressService.calculateProgressPercent(c)))
                 .filter(item -> item.progressPercent() < 100)
                 .toList();
     }
@@ -120,7 +96,7 @@ public class CourseUseCase {
     @Transactional(readOnly = true)
     public List<CourseStudentItemRes> getCompletedCourses() {
         return courseJpaRepo.findAll().stream()
-                .map(c -> CourseStudentItemRes.from(c, calculateProgressPercent(c)))
+                .map(c -> CourseStudentItemRes.from(c, courseProgressService.calculateProgressPercent(c)))
                 .filter(item -> item.progressPercent() >= 100)
                 .toList();
     }
