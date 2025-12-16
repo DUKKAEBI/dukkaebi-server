@@ -41,5 +41,21 @@ public class Problem {
     private Integer attemptCount = 0;
 
     @Column(nullable = false)
-    private LocalDate addedAt = LocalDate.now();
+    private LocalDate addedAt;
+
+    public void updateProblem(String name, String description, String input, String output, DifficultyType difficulty) {
+        this.name = name;
+        this.description = description;
+        this.input = input;
+        this.output = output;
+        this.difficulty = difficulty;
+    }
+
+    public void incrementSolvedCount() {
+        this.solvedCount++;
+    }
+
+    public void incrementAttemptCount() {
+        this.attemptCount++;
+    }
 }
