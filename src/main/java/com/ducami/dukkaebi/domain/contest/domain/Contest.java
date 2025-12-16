@@ -45,6 +45,13 @@ public class Contest {
     @CollectionTable(name = "tb_contest_problem", joinColumns = @JoinColumn(name = "contest_id", referencedColumnName = "code"))
     private List<Long> problemIds;
 
+    public void updateContest(String title, String description, LocalDate startDate, LocalDate endDate) {
+        this.title = title;
+        this.description = description;
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
+
     // 참가자 추가 (null 보호 + 중복 방지)
     public void addParticipant(Long userId) {
         if (participantIds == null) {

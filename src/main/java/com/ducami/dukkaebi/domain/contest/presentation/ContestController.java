@@ -28,16 +28,4 @@ public class ContestController {
     public ContestDetailRes getContestDetail(@PathVariable String code) {
         return contestUseCase.getContestDetail(code);
     }
-
-    @PostMapping("/create")
-    @Operation(summary = "대회 생성")
-    public Response createContest(@RequestBody ContestReq req) {
-        return contestUseCase.createContest(req);
-    }
-
-    @PostMapping("/{code}/join")
-    @Operation(summary = "대회 참가", description = "대회 코드로 참가")
-    public Response join(@PathVariable String code) {
-        return contestUseCase.joinContest(code);
-    }
 }

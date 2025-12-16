@@ -35,21 +35,6 @@ public class ContestUseCase {
 
     private static final ZoneId ZONE = ZoneId.of("Asia/Seoul");
 
-    @Transactional
-    public Response createContest(ContestReq req) {
-        if (contestJpaRepo.existsByTitle(req.title())) {
-            throw new CustomException(ContestErrorCode.TITLE_ALREADY);
-        }
-
-        String code = codeGenerator.generateCode();
-        while (contestJpaRepo.existsById(code)) {
-            code = codeGenerator.generateCode();
-        }
-
-        contestJpaRepo.save(ContestReq.fromReq(code, req));
-        return Response.created("대회가 성공적으로 생성되었습니다.");
-    }
-
     @Transactional(readOnly = true)
     public java.util.List<ContestListRes> getContestList() {
         Long userId = userSessionHolder.getUserId();
@@ -58,26 +43,6 @@ public class ContestUseCase {
                 .stream()
                 .map(contest -> ContestListRes.from(contest, userId))
                 .toList();
-    }
-
-    @Transactional
-    public Response joinContest(String code) {
-        Contest contest = contestJpaRepo.findById(code)
-                .orElseThrow(() -> new CustomException(ContestErrorCode.CONTEST_NOT_FOUND));
-
-        LocalDate today = LocalDate.now(ZONE);
-        if (contest.getEndDate().isBefore(today)) {
-            return Response.of(HttpStatus.BAD_REQUEST, "대회가 종료되었습니다.");
-        }
-
-        Long userId = userSessionHolder.getUserId();
-        if (contest.getParticipantIds().contains(userId)) {
-            return Response.ok("이미 참여중입니다.");
-        }
-
-        contest.addParticipant(userId);
-        contestJpaRepo.save(contest);
-        return Response.ok("대회에 참가하였습니다.");
     }
 
     @Transactional(readOnly = true)
@@ -101,5 +66,64 @@ public class ContestUseCase {
         }
 
         return ContestDetailRes.from(contest, problemResList);
+    }
+
+    // 관리자
+    @Transactional
+    public Response createContest(ContestReq req) {
+        if (contestJpaRepo.existsByTitle(req.title())) {
+            throw new CustomException(ContestErrorCode.TITLE_ALREADY);
+        }
+
+        String code = codeGenerator.generateCode();
+        while (contestJpaRepo.existsById(code)) {
+            code = codeGenerator.generateCode();
+        }
+
+        contestJpaRepo.save(ContestReq.fromReq(code, req));
+        return Response.created("대회가 성공적으로 생성되었습니다.");
+    }
+
+    @Transactional
+    public Response updateContest(String code, ContestReq req) {
+        Contest contest = contestJpaRepo.findById(code)
+                .orElseThrow(() -> new CustomException(ContestErrorCode.CONTEST_NOT_FOUND));
+
+        if (!contest.getTitle().equals(req.title()) && contestJpaRepo.existsByTitle(req.title())) {
+            throw new CustomException(ContestErrorCode.TITLE_ALREADY);
+        }
+
+        contest.updateContest(req.title(), req.description(), req.startDate(), req.endDate());
+        return Response.ok("대회가 성공적으로 수정되었습니다.");
+    }
+
+    @Transactional
+    public Response deleteContest(String code) {
+        Contest contest = contestJpaRepo.findById(code)
+                .orElseThrow(() -> new CustomException(ContestErrorCode.CONTEST_NOT_FOUND));
+
+        contestJpaRepo.delete(contest);
+        return Response.ok("대회가 성공적으로 삭제되었습니다.");
+    }
+
+    // 학생
+    @Transactional
+    public Response joinContest(String code) {
+        Contest contest = contestJpaRepo.findById(code)
+                .orElseThrow(() -> new CustomException(ContestErrorCode.CONTEST_NOT_FOUND));
+
+        LocalDate today = LocalDate.now(ZONE);
+        if (contest.getEndDate().isBefore(today)) {
+            return Response.of(HttpStatus.BAD_REQUEST, "대회가 종료되었습니다.");
+        }
+
+        Long userId = userSessionHolder.getUserId();
+        if (contest.getParticipantIds().contains(userId)) {
+            return Response.ok("이미 참여중입니다.");
+        }
+
+        contest.addParticipant(userId);
+        contestJpaRepo.save(contest);
+        return Response.ok("대회에 참가하였습니다.");
     }
 }
