@@ -1,4 +1,4 @@
-package com.ducami.dukkaebi.domain.problem.presentation;
+package com.ducami.dukkaebi.domain.problem.presentation.controller;
 
 import com.ducami.dukkaebi.domain.problem.domain.enums.DifficultyType;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemDetailRes;

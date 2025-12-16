@@ -9,7 +9,7 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @Entity
 @SuperBuilder
-@Table(name = "tb_problem_test_ase")
+@Table(name = "tb_problem_test_case")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ProblemTestCase {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
