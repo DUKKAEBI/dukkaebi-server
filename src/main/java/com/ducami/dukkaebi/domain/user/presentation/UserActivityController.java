@@ -3,6 +3,7 @@ package com.ducami.dukkaebi.domain.user.presentation;
 import com.ducami.dukkaebi.domain.user.presentation.dto.response.StreakRes;
 import com.ducami.dukkaebi.domain.user.usecase.UserActivityUseCase;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.Map;
 
+@Tag(name = "사용자 활동 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/user/activity")
