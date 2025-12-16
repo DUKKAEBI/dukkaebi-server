@@ -1,17 +1,7 @@
 package com.ducami.dukkaebi.domain.course.domain;
 
 import com.ducami.dukkaebi.domain.course.domain.enums.LevelType;
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -42,7 +32,7 @@ public class Course {
     @Enumerated(EnumType.STRING)
     private LevelType level;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "tb_course_problem", joinColumns = @JoinColumn(name = "course_id"))
     private List<Long> problemIds;
 
