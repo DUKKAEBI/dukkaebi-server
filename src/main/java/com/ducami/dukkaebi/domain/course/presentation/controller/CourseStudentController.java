@@ -1,9 +1,10 @@
-package com.ducami.dukkaebi.domain.course.presentation;
+package com.ducami.dukkaebi.domain.course.presentation.controller;
 
 import com.ducami.dukkaebi.domain.course.presentation.dto.response.CourseStudentItemRes;
 import com.ducami.dukkaebi.domain.course.usecase.CourseUseCase;
 import com.ducami.dukkaebi.global.common.Response;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.List;
 
+@Tag(name = "코스 학생 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/student/course")
