@@ -1,4 +1,4 @@
-package com.ducami.dukkaebi.domain.course.presentation;
+package com.ducami.dukkaebi.domain.course.presentation.controller;
 
 import com.ducami.dukkaebi.domain.course.presentation.dto.request.CourseReq;
 import com.ducami.dukkaebi.domain.course.usecase.CourseUseCase;

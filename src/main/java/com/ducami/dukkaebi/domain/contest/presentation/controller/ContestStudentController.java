@@ -1,4 +1,4 @@
-package com.ducami.dukkaebi.domain.contest.presentation;
+package com.ducami.dukkaebi.domain.contest.presentation.controller;
 
 import com.ducami.dukkaebi.domain.contest.usecase.ContestUseCase;
 import com.ducami.dukkaebi.global.common.Response;

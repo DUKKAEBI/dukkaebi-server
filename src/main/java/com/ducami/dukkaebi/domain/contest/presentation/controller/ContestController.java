@@ -1,10 +1,8 @@
-package com.ducami.dukkaebi.domain.contest.presentation;
+package com.ducami.dukkaebi.domain.contest.presentation.controller;
 
-import com.ducami.dukkaebi.domain.contest.presentation.dto.request.ContestReq;
 import com.ducami.dukkaebi.domain.contest.presentation.dto.response.ContestDetailRes;
 import com.ducami.dukkaebi.domain.contest.presentation.dto.response.ContestListRes;
 import com.ducami.dukkaebi.domain.contest.usecase.ContestUseCase;
-import com.ducami.dukkaebi.global.common.Response;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
