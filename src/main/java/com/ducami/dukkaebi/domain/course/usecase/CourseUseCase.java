@@ -48,7 +48,13 @@ public class CourseUseCase {
                 .map((Problem p) -> ProblemRes.from(p, null))
                 .toList();
 
-        return CourseDetailRes.from(course, problems);
+        // 수강 여부, 진행도, 상태 계산
+        Long userId = userSessionHolder.getUserId();
+        boolean isEnrolled = course.hasParticipant(userId);
+        int progressPercent = courseProgressService.calculateProgressPercent(course);
+        CourseStatus status = courseProgressService.calculateCourseStatus(course);
+
+        return CourseDetailRes.from(course, problems, isEnrolled, progressPercent, status);
     }
 
     @Transactional
