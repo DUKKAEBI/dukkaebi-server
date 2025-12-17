@@ -1,5 +1,6 @@
 package com.ducami.dukkaebi.domain.user.domain;
 
+import com.ducami.dukkaebi.domain.user.domain.enums.GrowthType;
 import com.ducami.dukkaebi.domain.user.domain.enums.UserType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -39,7 +40,11 @@ public class User {
     @Column(nullable = false)
     private int score;
 
+    @Column(nullable = false)
+    private GrowthType growth;
+
     public void addScore(int amount) {
         this.score += amount;
+        this.growth = GrowthType.fromScore(this.score);
     }
 }

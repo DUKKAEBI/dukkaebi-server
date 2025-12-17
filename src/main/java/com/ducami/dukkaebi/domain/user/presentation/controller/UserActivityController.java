@@ -1,4 +1,4 @@
-package com.ducami.dukkaebi.domain.user.presentation;
+package com.ducami.dukkaebi.domain.user.presentation.controller;
 
 import com.ducami.dukkaebi.domain.user.presentation.dto.response.StreakRes;
 import com.ducami.dukkaebi.domain.user.usecase.UserActivityUseCase;
