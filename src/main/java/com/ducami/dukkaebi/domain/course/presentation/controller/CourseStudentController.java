@@ -1,5 +1,6 @@
 package com.ducami.dukkaebi.domain.course.presentation.controller;
 
+import com.ducami.dukkaebi.domain.course.presentation.dto.response.CourseListWithCountRes;
 import com.ducami.dukkaebi.domain.course.presentation.dto.response.CourseStudentItemRes;
 import com.ducami.dukkaebi.domain.course.usecase.CourseUseCase;
 import com.ducami.dukkaebi.global.common.Response;
@@ -36,7 +37,7 @@ public class CourseStudentController {
 
     @GetMapping("/completed")
     @Operation(summary = "완료된 코스 조회")
-    public @ResponseBody List<CourseStudentItemRes> getCompleted() {
+    public @ResponseBody CourseListWithCountRes getCompleted() {
         return courseUseCase.getCompletedCourses();
     }
 

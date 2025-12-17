@@ -7,6 +7,7 @@ import com.ducami.dukkaebi.domain.course.presentation.dto.request.CourseProblemR
 import com.ducami.dukkaebi.domain.course.presentation.dto.request.CourseReq;
 import com.ducami.dukkaebi.domain.course.presentation.dto.response.CourseDetailRes;
 import com.ducami.dukkaebi.domain.course.presentation.dto.response.CourseListRes;
+import com.ducami.dukkaebi.domain.course.presentation.dto.response.CourseListWithCountRes;
 import com.ducami.dukkaebi.domain.course.presentation.dto.response.CourseStudentItemRes;
 import com.ducami.dukkaebi.domain.course.service.CourseProgressService;
 import com.ducami.dukkaebi.domain.problem.domain.Problem;
@@ -122,15 +123,26 @@ public class CourseUseCase {
 
     // 학생: 완료 코스 목록 (COMPLETED)
     @Transactional(readOnly = true)
-    public List<CourseStudentItemRes> getCompletedCourses() {
-        return courseJpaRepo.findAll().stream()
+    public CourseListWithCountRes getCompletedCourses() {
+        List<CourseStudentItemRes> allCourses = courseJpaRepo.findAll().stream()
                 .map(c -> {
                     int progress = courseProgressService.calculateProgressPercent(c);
                     CourseStatus status = courseProgressService.calculateCourseStatus(c);
                     return CourseStudentItemRes.from(c, progress, status);
                 })
+                .toList();
+
+        // 완료된 코스 필터링
+        List<CourseStudentItemRes> completedCourses = allCourses.stream()
                 .filter(item -> item.status() == CourseStatus.COMPLETED)
                 .toList();
+
+        // 진행 중인 코스 개수 계산
+        int inProgressCount = (int) allCourses.stream()
+                .filter(item -> item.status() == CourseStatus.IN_PROGRESS)
+                .count();
+
+        return CourseListWithCountRes.of(inProgressCount, completedCourses);
     }
 
     // 학생: 수강 가능한 코스 목록 (NOT_STARTED)
