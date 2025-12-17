@@ -1,6 +1,6 @@
 package com.ducami.dukkaebi.domain.user.presentation.controller;
 
-import com.ducami.dukkaebi.domain.user.presentation.dto.request.UserFilterReq;
+import com.ducami.dukkaebi.domain.user.domain.enums.SortType;
 import com.ducami.dukkaebi.domain.user.presentation.dto.response.UserInfoRes;
 import com.ducami.dukkaebi.domain.user.presentation.dto.response.UserListRes;
 import com.ducami.dukkaebi.domain.user.usecase.UserUseCase;
@@ -11,10 +11,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -52,8 +52,11 @@ public class UserController {
                     - sortBy: 정렬 기준 (NICKNAME, LOGIN_ID, GROWTH)
                     """
     )
-    public List<UserListRes> getFilteredUsers(@ModelAttribute UserFilterReq filter) {
-        return userUseCase.getFilteredUsers(filter);
+    public List<UserListRes> getFilteredUsers(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) SortType sortBy
+    ) {
+        return userUseCase.getFilteredUsers(keyword, sortBy);
     }
 
     @PostMapping("/logout")

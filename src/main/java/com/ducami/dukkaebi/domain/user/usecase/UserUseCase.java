@@ -1,10 +1,10 @@
 package com.ducami.dukkaebi.domain.user.usecase;
 
 import com.ducami.dukkaebi.domain.user.domain.User;
+import com.ducami.dukkaebi.domain.user.domain.enums.SortType;
 import com.ducami.dukkaebi.domain.user.domain.enums.UserType;
 import com.ducami.dukkaebi.domain.user.domain.repo.UserJpaRepo;
 import com.ducami.dukkaebi.domain.user.error.UserErrorCode;
-import com.ducami.dukkaebi.domain.user.presentation.dto.request.UserFilterReq;
 import com.ducami.dukkaebi.domain.user.presentation.dto.response.UserInfoRes;
 import com.ducami.dukkaebi.domain.user.presentation.dto.response.UserListRes;
 import com.ducami.dukkaebi.domain.user.service.UserDeleteService;
@@ -49,9 +49,9 @@ public class UserUseCase {
         return UserInfoRes.from(user);
     }
 
-    public List<UserListRes> getFilteredUsers(UserFilterReq filter) {
+    public List<UserListRes> getFilteredUsers(String keyword, SortType sortType) {
         List<User> users = userJpaRepo.findAll();
-        return userFilterService.filterAndSortUsers(users, filter).stream()
+        return userFilterService.filterAndSortUsers(users, keyword, sortType).stream()
                 .map(UserListRes::from)
                 .toList();
     }
