@@ -38,4 +38,16 @@ public class CourseAdminController {
     public Response deleteCourse(@PathVariable("courseId") Long courseId) {
         return courseUseCase.deleteCourse(courseId);
     }
+
+    @PostMapping("/{courseId}/problem/{problemId}")
+    @Operation(summary = "코스에 문제 추가")
+    public Response addProblemToCourse(@PathVariable("courseId") Long courseId, @PathVariable("problemId") Long problemId) {
+        return courseUseCase.addProblemToCourse(courseId, problemId);
+    }
+
+    @DeleteMapping("/{courseId}/problem/{problemId}")
+    @Operation(summary = "코스에서 문제 삭제")
+    public Response removeProblemFromCourse(@PathVariable("courseId") Long courseId, @PathVariable("problemId") Long problemId) {
+        return courseUseCase.removeProblemFromCourse(courseId, problemId);
+    }
 }

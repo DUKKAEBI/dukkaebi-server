@@ -5,11 +5,13 @@ import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemDetai
 import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemRes;
 import com.ducami.dukkaebi.domain.problem.usecase.ProblemUseCase;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "문제 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/problems")

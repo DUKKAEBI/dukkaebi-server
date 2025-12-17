@@ -43,6 +43,9 @@ public class Problem {
     @Column(nullable = false)
     private LocalDate addedAt;
 
+    @Column
+    private String contestId;
+
     public void updateProblem(String name, String description, String input, String output, DifficultyType difficulty) {
         this.name = name;
         this.description = description;

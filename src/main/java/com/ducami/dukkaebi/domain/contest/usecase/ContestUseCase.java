@@ -12,8 +12,11 @@ import com.ducami.dukkaebi.global.exception.CustomException;
 import com.ducami.dukkaebi.global.security.auth.UserSessionHolder;
 import com.ducami.dukkaebi.domain.problem.domain.Problem;
 import com.ducami.dukkaebi.domain.problem.domain.ProblemHistory;
+import com.ducami.dukkaebi.domain.problem.domain.ProblemTestCase;
 import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemHistoryJpaRepo;
 import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemJpaRepo;
+import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemTestCaseJpaRepo;
+import com.ducami.dukkaebi.domain.problem.presentation.dto.request.ProblemCreateReq;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemRes;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -32,6 +35,7 @@ public class ContestUseCase {
     private final UserSessionHolder userSessionHolder;
     private final ProblemJpaRepo problemJpaRepo;
     private final ProblemHistoryJpaRepo problemHistoryJpaRepo;
+    private final ProblemTestCaseJpaRepo problemTestCaseJpaRepo;
 
     private static final ZoneId ZONE = ZoneId.of("Asia/Seoul");
 
@@ -125,5 +129,66 @@ public class ContestUseCase {
         contest.addParticipant(userId);
         contestJpaRepo.save(contest);
         return Response.ok("대회에 참가하였습니다.");
+    }
+
+    // 대회 전용 문제 생성
+    @Transactional
+    public Response createContestProblem(String code, ProblemCreateReq req) {
+        Contest contest = contestJpaRepo.findById(code)
+                .orElseThrow(() -> new CustomException(ContestErrorCode.CONTEST_NOT_FOUND));
+
+        // 대회 전용 문제 생성
+        Problem problem = req.toContestEntity(code);
+        Problem savedProblem = problemJpaRepo.save(problem);
+
+        // 테스트 케이스 저장
+        if (req.testCases() != null && !req.testCases().isEmpty()) {
+            for (ProblemCreateReq.TestCaseReq tcReq : req.testCases()) {
+                ProblemTestCase testCase = ProblemTestCase.builder()
+                        .problem(savedProblem)
+                        .input(tcReq.input())
+                        .output(tcReq.output())
+                        .build();
+                problemTestCaseJpaRepo.save(testCase);
+            }
+        }
+
+        // 대회의 문제 목록에 추가
+        List<Long> problemIds = contest.getProblemIds();
+        if (problemIds == null) {
+            problemIds = new ArrayList<>();
+        }
+        problemIds.add(savedProblem.getProblemId());
+        contestJpaRepo.save(contest);
+
+        return Response.created("대회 전용 문제가 성공적으로 생성되었습니다.");
+    }
+
+    // 대회 문제 삭제
+    @Transactional
+    public Response deleteContestProblem(String code, Long problemId) {
+        Contest contest = contestJpaRepo.findById(code)
+                .orElseThrow(() -> new CustomException(ContestErrorCode.CONTEST_NOT_FOUND));
+
+        Problem problem = problemJpaRepo.findById(problemId)
+                .orElseThrow(() -> new CustomException(com.ducami.dukkaebi.domain.problem.error.ProblemErrorCode.PROBLEM_NOT_FOUND));
+
+        // 대회 전용 문제인지 확인
+        if (!code.equals(problem.getContestId())) {
+            throw new CustomException(ContestErrorCode.NOT_CONTEST_PROBLEM);
+        }
+
+        // 대회의 문제 목록에서 제거
+        List<Long> problemIds = contest.getProblemIds();
+        if (problemIds != null) {
+            problemIds.remove(problemId);
+            contestJpaRepo.save(contest);
+        }
+
+        // 문제 및 테스트 케이스 삭제
+        problemTestCaseJpaRepo.deleteAll(problemTestCaseJpaRepo.findByProblem_ProblemId(problemId));
+        problemJpaRepo.delete(problem);
+
+        return Response.ok("대회 문제가 성공적으로 삭제되었습니다.");
     }
 }

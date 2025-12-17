@@ -142,4 +142,46 @@ public class CourseUseCase {
                 .filter(item -> item.status() == CourseStatus.NOT_STARTED)
                 .toList();
     }
+
+    // 관리자: 코스에 문제 추가 (기존 문제 선택)
+    @Transactional
+    public Response addProblemToCourse(Long courseId, Long problemId) {
+        Course course = courseJpaRepo.findById(courseId)
+                .orElseThrow(() -> new CustomException(CourseErrorCode.COURSE_NOT_FOUND));
+
+        Problem problem = problemJpaRepo.findById(problemId)
+                .orElseThrow(() -> new CustomException(com.ducami.dukkaebi.domain.problem.error.ProblemErrorCode.PROBLEM_NOT_FOUND));
+
+        // 대회 전용 문제는 코스에 추가할 수 없음
+        if (problem.getContestId() != null) {
+            throw new CustomException(com.ducami.dukkaebi.domain.problem.error.ProblemErrorCode.CONTEST_PROBLEM_NOT_ALLOWED);
+        }
+
+        List<Long> problemIds = course.getProblemIds();
+        if (problemIds == null) {
+            problemIds = new java.util.ArrayList<>();
+        }
+
+        if (problemIds.contains(problemId)) {
+            throw new CustomException(CourseErrorCode.PROBLEM_ALREADY_IN_COURSE);
+        }
+
+        problemIds.add(problemId);
+        return Response.ok("문제가 코스에 추가되었습니다.");
+    }
+
+    // 관리자: 코스에서 문제 제거
+    @Transactional
+    public Response removeProblemFromCourse(Long courseId, Long problemId) {
+        Course course = courseJpaRepo.findById(courseId)
+                .orElseThrow(() -> new CustomException(CourseErrorCode.COURSE_NOT_FOUND));
+
+        List<Long> problemIds = course.getProblemIds();
+        if (problemIds == null || !problemIds.contains(problemId)) {
+            throw new CustomException(CourseErrorCode.PROBLEM_NOT_IN_COURSE);
+        }
+
+        problemIds.remove(problemId);
+        return Response.ok("문제가 코스에서 제거되었습니다.");
+    }
 }

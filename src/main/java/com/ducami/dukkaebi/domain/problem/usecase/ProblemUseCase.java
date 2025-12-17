@@ -76,17 +76,7 @@ public class ProblemUseCase {
     // 관리자
     @Transactional
     public Response createProblem(ProblemCreateReq req) {
-        Problem problem = Problem.builder()
-                .name(req.name())
-                .description(req.description())
-                .input(req.input())
-                .output(req.output())
-                .difficulty(req.difficulty())
-                .solvedCount(0)
-                .attemptCount(0)
-                .addedAt(LocalDate.now())
-                .build();
-
+        Problem problem = req.toEntity();
         Problem savedProblem = problemJpaRepo.save(problem);
 
         // 테스트 케이스 저장
