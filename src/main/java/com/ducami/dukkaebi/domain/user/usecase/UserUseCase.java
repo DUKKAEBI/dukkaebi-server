@@ -6,6 +6,7 @@ import com.ducami.dukkaebi.domain.user.domain.repo.UserJpaRepo;
 import com.ducami.dukkaebi.domain.user.error.UserErrorCode;
 import com.ducami.dukkaebi.domain.user.presentation.dto.response.UserInfoRes;
 import com.ducami.dukkaebi.domain.user.presentation.dto.response.UserListRes;
+import com.ducami.dukkaebi.domain.user.service.UserDeleteService;
 import com.ducami.dukkaebi.global.common.Response;
 import com.ducami.dukkaebi.global.exception.CustomException;
 import com.ducami.dukkaebi.global.security.auth.UserSessionHolder;
@@ -25,6 +26,7 @@ public class UserUseCase {
     private final JwtTokenService jwtTokenService;
     private final UserSessionHolder userSessionHolder;
     private final UserJpaRepo userJpaRepo;
+    private final UserDeleteService userDeleteService;
 
     public UserInfoRes getUserInfo() {
         User user = userSessionHolder.getUser();
@@ -59,5 +61,17 @@ public class UserUseCase {
             SecurityContextHolder.clearContext();
             return Response.ok("로그아웃에 성공하였습니다.");
         }
+    }
+
+    public Response deleteUser() {
+        Long userId = userSessionHolder.getUserId();
+        return userDeleteService.deleteUserWithRelatedData(userId);
+    }
+
+    // 관리자
+    public Response deleteUserByAdmin(Long userId) {
+        User user = userJpaRepo.findById(userId)
+                .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
+        return userDeleteService.deleteUserWithRelatedData(userId);
     }
 }

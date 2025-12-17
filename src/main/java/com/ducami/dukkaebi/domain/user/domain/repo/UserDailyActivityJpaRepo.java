@@ -10,5 +10,6 @@ import java.util.Optional;
 public interface UserDailyActivityJpaRepo extends JpaRepository<UserDailyActivity, Long> {
     Optional<UserDailyActivity> findByUser_IdAndActivityDate(Long userId, LocalDate activityDate);
     List<UserDailyActivity> findAllByUser_IdAndActivityDateBetweenOrderByActivityDate(Long userId, LocalDate start, LocalDate end);
+    int deleteByUser_Id(Long userId);
 }
 

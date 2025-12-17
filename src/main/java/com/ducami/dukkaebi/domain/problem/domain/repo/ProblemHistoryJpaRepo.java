@@ -10,6 +10,7 @@ import java.util.Optional;
 @Repository
 public interface ProblemHistoryJpaRepo extends JpaRepository<ProblemHistory, Long> {
     List<ProblemHistory> findByUser_Id(Long userId);
+    int deleteByUser_Id(Long userId);
 
     // 사용자-문제 단건 조회
     Optional<ProblemHistory> findByUser_IdAndProblem_ProblemId(Long userId, Long problemId);

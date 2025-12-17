@@ -41,6 +41,7 @@ public class User {
     private int score;
 
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private GrowthType growth;
 
     public void addScore(int amount) {

@@ -1,6 +1,7 @@
 package com.ducami.dukkaebi.domain.auth.presentation.dto.request;
 
 import com.ducami.dukkaebi.domain.user.domain.User;
+import com.ducami.dukkaebi.domain.user.domain.enums.GrowthType;
 import com.ducami.dukkaebi.domain.user.domain.enums.UserType;
 
 public record SignUpReq(
@@ -14,6 +15,7 @@ public record SignUpReq(
                 .nickname(req.nickname)
                 .role(UserType.STUDENT)
                 .score(0)
+                .growth(GrowthType.WISP)
                 .build();
     }
 }
