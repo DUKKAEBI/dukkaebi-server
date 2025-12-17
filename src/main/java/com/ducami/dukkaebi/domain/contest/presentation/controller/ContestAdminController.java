@@ -2,6 +2,7 @@ package com.ducami.dukkaebi.domain.contest.presentation.controller;
 
 import com.ducami.dukkaebi.domain.contest.presentation.dto.request.ContestReq;
 import com.ducami.dukkaebi.domain.contest.usecase.ContestUseCase;
+import com.ducami.dukkaebi.domain.problem.presentation.dto.request.ProblemCreateReq;
 import com.ducami.dukkaebi.global.common.Response;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -37,5 +38,17 @@ public class ContestAdminController {
     @Operation(summary = "대회 삭제")
     public Response deleteContest(@PathVariable("code") String code) {
         return contestUseCase.deleteContest(code);
+    }
+
+    @PostMapping("/{code}/problem/create")
+    @Operation(summary = "대회 전용 문제 생성")
+    public Response createContestProblem(@PathVariable("code") String code, @RequestBody ProblemCreateReq req) {
+        return contestUseCase.createContestProblem(code, req);
+    }
+
+    @DeleteMapping("/{code}/problem/{problemId}")
+    @Operation(summary = "대회 문제 삭제")
+    public Response deleteContestProblem(@PathVariable("code") String code, @PathVariable("problemId") Long problemId) {
+        return contestUseCase.deleteContestProblem(code, problemId);
     }
 }

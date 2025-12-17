@@ -23,6 +23,7 @@ public class CourseStudentController {
     private final CourseUseCase courseUseCase;
 
     @PostMapping("/{courseId}/join")
+    @Operation(summary = "코스 참가")
     public @ResponseBody Response joinCourse(@PathVariable("courseId") Long courseId) {
         return courseUseCase.joinCourse(courseId);
     }

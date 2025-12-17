@@ -50,8 +50,8 @@ public class ProblemService {
                 }
             }
 
-            // 모든 문제 조회
-            List<Problem> problems = problemJpaRepo.findAll();
+            // 모든 문제 조회 (대회 전용 문제 제외)
+            List<Problem> problems = problemJpaRepo.findByContestIdIsNull();
             log.info("문제 조회 완료 - 총 {}개", problems.size());
 
             // DTO 변환
@@ -113,13 +113,16 @@ public class ProblemService {
                 }
             }
 
-            // 1. 난이도 필터 적용
+            // 1. 난이도 필터 적용 (대회 전용 문제 제외)
             List<Problem> problems;
             if (difficulty != null) {
-                problems = problemJpaRepo.findByDifficulty(difficulty);
+                // 난이도로 필터링하되, contestId가 null인 것만
+                problems = problemJpaRepo.findByDifficulty(difficulty).stream()
+                        .filter(p -> p.getContestId() == null)
+                        .collect(Collectors.toList());
                 log.info("난이도 필터 적용 - {}: {}개", difficulty, problems.size());
             } else {
-                problems = problemJpaRepo.findAll();
+                problems = problemJpaRepo.findByContestIdIsNull();
                 log.info("난이도 필터 없음 - 전체: {}개", problems.size());
             }
 
@@ -170,8 +173,10 @@ public class ProblemService {
                 }
             }
 
-            // 이름으로 문제 검색
-            List<Problem> problems = problemJpaRepo.searchByName(name);
+            // 이름으로 문제 검색 (대회 전용 문제 제외)
+            List<Problem> problems = problemJpaRepo.searchByName(name).stream()
+                    .filter(p -> p.getContestId() == null)
+                    .collect(Collectors.toList());
             log.info("검색 결과 - {}개", problems.size());
 
             return problems.stream()
