@@ -1,5 +1,6 @@
 package com.ducami.dukkaebi.domain.course.presentation.controller;
 
+import com.ducami.dukkaebi.domain.course.presentation.dto.request.CourseProblemReq;
 import com.ducami.dukkaebi.domain.course.presentation.dto.request.CourseReq;
 import com.ducami.dukkaebi.domain.course.usecase.CourseUseCase;
 import com.ducami.dukkaebi.global.common.Response;
@@ -39,10 +40,10 @@ public class CourseAdminController {
         return courseUseCase.deleteCourse(courseId);
     }
 
-    @PostMapping("/{courseId}/problem/{problemId}")
+    @PostMapping("/{courseId}/problems")
     @Operation(summary = "코스에 문제 추가")
-    public Response addProblemToCourse(@PathVariable("courseId") Long courseId, @PathVariable("problemId") Long problemId) {
-        return courseUseCase.addProblemToCourse(courseId, problemId);
+    public Response addProblemsToCourse(@PathVariable("courseId") Long courseId, @RequestBody CourseProblemReq req) {
+        return courseUseCase.addProblemsToCourse(courseId, req);
     }
 
     @DeleteMapping("/{courseId}/problem/{problemId}")

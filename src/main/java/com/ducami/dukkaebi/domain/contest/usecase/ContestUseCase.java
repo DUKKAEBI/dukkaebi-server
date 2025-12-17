@@ -7,6 +7,7 @@ import com.ducami.dukkaebi.domain.contest.presentation.dto.request.ContestReq;
 import com.ducami.dukkaebi.domain.contest.presentation.dto.response.ContestDetailRes;
 import com.ducami.dukkaebi.domain.contest.presentation.dto.response.ContestListRes;
 import com.ducami.dukkaebi.domain.contest.util.CodeGenerator;
+import com.ducami.dukkaebi.domain.problem.error.ProblemErrorCode;
 import com.ducami.dukkaebi.global.common.Response;
 import com.ducami.dukkaebi.global.exception.CustomException;
 import com.ducami.dukkaebi.global.security.auth.UserSessionHolder;
@@ -171,7 +172,7 @@ public class ContestUseCase {
                 .orElseThrow(() -> new CustomException(ContestErrorCode.CONTEST_NOT_FOUND));
 
         Problem problem = problemJpaRepo.findById(problemId)
-                .orElseThrow(() -> new CustomException(com.ducami.dukkaebi.domain.problem.error.ProblemErrorCode.PROBLEM_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ProblemErrorCode.PROBLEM_NOT_FOUND));
 
         // 대회 전용 문제인지 확인
         if (!code.equals(problem.getContestId())) {

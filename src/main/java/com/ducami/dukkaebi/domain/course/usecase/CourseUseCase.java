@@ -3,6 +3,7 @@ package com.ducami.dukkaebi.domain.course.usecase;
 import com.ducami.dukkaebi.domain.course.domain.Course;
 import com.ducami.dukkaebi.domain.course.domain.repo.CourseJpaRepo;
 import com.ducami.dukkaebi.domain.course.error.CourseErrorCode;
+import com.ducami.dukkaebi.domain.course.presentation.dto.request.CourseProblemReq;
 import com.ducami.dukkaebi.domain.course.presentation.dto.request.CourseReq;
 import com.ducami.dukkaebi.domain.course.presentation.dto.response.CourseDetailRes;
 import com.ducami.dukkaebi.domain.course.presentation.dto.response.CourseListRes;
@@ -10,6 +11,7 @@ import com.ducami.dukkaebi.domain.course.presentation.dto.response.CourseStudent
 import com.ducami.dukkaebi.domain.course.service.CourseProgressService;
 import com.ducami.dukkaebi.domain.problem.domain.Problem;
 import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemJpaRepo;
+import com.ducami.dukkaebi.domain.problem.error.ProblemErrorCode;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemRes;
 import com.ducami.dukkaebi.global.common.Response;
 import com.ducami.dukkaebi.global.exception.CustomException;
@@ -19,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -143,31 +146,47 @@ public class CourseUseCase {
                 .toList();
     }
 
-    // 관리자: 코스에 문제 추가 (기존 문제 선택)
+    // 관리자: 코스에 문제 추가
     @Transactional
-    public Response addProblemToCourse(Long courseId, Long problemId) {
+    public Response addProblemsToCourse(Long courseId, CourseProblemReq req) {
         Course course = courseJpaRepo.findById(courseId)
                 .orElseThrow(() -> new CustomException(CourseErrorCode.COURSE_NOT_FOUND));
 
-        Problem problem = problemJpaRepo.findById(problemId)
-                .orElseThrow(() -> new CustomException(com.ducami.dukkaebi.domain.problem.error.ProblemErrorCode.PROBLEM_NOT_FOUND));
+        if (req.problemIds() == null || req.problemIds().isEmpty()) {
+            return Response.ok("추가할 문제가 없습니다.");
+        }
 
-        // 대회 전용 문제는 코스에 추가할 수 없음
-        if (problem.getContestId() != null) {
-            throw new CustomException(com.ducami.dukkaebi.domain.problem.error.ProblemErrorCode.CONTEST_PROBLEM_NOT_ALLOWED);
+        // 문제들 존재 여부 및 대회 전용 문제 확인
+        List<Problem> problems = problemJpaRepo.findAllById(req.problemIds());
+
+        if (problems.size() != req.problemIds().size()) {
+            throw new CustomException(ProblemErrorCode.PROBLEM_NOT_FOUND);
+        }
+
+        for (Problem problem : problems) {
+            if (problem.getContestId() != null) {
+                throw new CustomException(ProblemErrorCode.CONTEST_PROBLEM_NOT_ALLOWED);
+            }
         }
 
         List<Long> problemIds = course.getProblemIds();
         if (problemIds == null) {
-            problemIds = new java.util.ArrayList<>();
+            problemIds = new ArrayList<>();
         }
 
-        if (problemIds.contains(problemId)) {
+        int addedCount = 0;
+        for (Long problemId : req.problemIds()) {
+            if (!problemIds.contains(problemId)) {
+                problemIds.add(problemId);
+                addedCount++;
+            }
+        }
+
+        if (addedCount == 0) {
             throw new CustomException(CourseErrorCode.PROBLEM_ALREADY_IN_COURSE);
         }
 
-        problemIds.add(problemId);
-        return Response.ok("문제가 코스에 추가되었습니다.");
+        return Response.ok(addedCount + "개의 문제가 코스에 추가되었습니다.");
     }
 
     // 관리자: 코스에서 문제 제거
