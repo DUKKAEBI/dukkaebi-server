@@ -65,11 +65,11 @@ public class SecurityConfig {
 
         // 개발/배포 환경 도메인/포트 허용 (정확 매칭이 어려우면 패턴 사용)
         cors.setAllowedOriginPatterns(List.of(
-
                 "http://localhost:*",
                 "http://127.0.0.1:*",
                 "https://dukkaebi.o-r.kr",
-                "https://dukkaebi.vercel.app/"
+                "https://dukkaebi.vercel.app/",
+                "https://dukkaebi-admin.vercel.app/"
         ));
         cors.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
         cors.addAllowedHeader("*");
