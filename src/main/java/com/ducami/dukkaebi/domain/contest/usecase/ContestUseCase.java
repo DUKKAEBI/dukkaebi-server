@@ -192,4 +192,16 @@ public class ContestUseCase {
 
         return Response.ok("대회 문제가 성공적으로 삭제되었습니다.");
     }
+
+    // 대회 종료
+    @Transactional
+    public Response endContest(String code) {
+        Contest contest = contestJpaRepo.findById(code)
+                .orElseThrow(() -> new CustomException(ContestErrorCode.CONTEST_NOT_FOUND));
+
+        contest.end();
+        contestJpaRepo.save(contest);
+
+        return Response.ok("대회가 성공적으로 종료되었습니다.");
+    }
 }

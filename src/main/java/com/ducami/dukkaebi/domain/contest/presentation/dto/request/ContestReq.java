@@ -1,6 +1,7 @@
 package com.ducami.dukkaebi.domain.contest.presentation.dto.request;
 
 import com.ducami.dukkaebi.domain.contest.domain.Contest;
+import com.ducami.dukkaebi.domain.contest.domain.enums.ContestStatus;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -19,6 +20,7 @@ public record ContestReq(
                 .description(req.description)
                 .startDate(req.startDate)
                 .endDate(req.endDate)
+                .status(ContestStatus.JOINABLE)
                 .participantIds(new ArrayList<>(List.of()))
                 .build();
     }

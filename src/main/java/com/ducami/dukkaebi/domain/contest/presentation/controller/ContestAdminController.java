@@ -51,4 +51,10 @@ public class ContestAdminController {
     public Response deleteContestProblem(@PathVariable("code") String code, @PathVariable("problemId") Long problemId) {
         return contestUseCase.deleteContestProblem(code, problemId);
     }
+
+    @PatchMapping("/{code}/end")
+    @Operation(summary = "대회 종료")
+    public Response endContest(@PathVariable("code") String code) {
+        return contestUseCase.endContest(code);
+    }
 }

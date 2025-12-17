@@ -1,6 +1,7 @@
 package com.ducami.dukkaebi.domain.contest.presentation.dto.response;
 
 import com.ducami.dukkaebi.domain.contest.domain.Contest;
+import com.ducami.dukkaebi.domain.contest.domain.enums.ContestStatus;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemRes;
 import java.time.LocalDate;
 import java.util.List;
@@ -13,6 +14,7 @@ public record ContestDetailRes(
         String description,
         LocalDate startDate,
         LocalDate endDate,
+        ContestStatus status,
         int participantCount,
         List<ProblemRes> problems
 ) {
@@ -24,6 +26,7 @@ public record ContestDetailRes(
                 .description(contest.getDescription())
                 .startDate(contest.getStartDate())
                 .endDate(contest.getEndDate())
+                .status(contest.getStatus())
                 .participantCount(participantCount)
                 .problems(problems)
                 .build();

@@ -1,9 +1,12 @@
 package com.ducami.dukkaebi.domain.contest.domain;
 
+import com.ducami.dukkaebi.domain.contest.domain.enums.ContestStatus;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
@@ -37,6 +40,10 @@ public class Contest {
     @Column(nullable = false)
     private LocalDate endDate;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ContestStatus status;
+
     @ElementCollection
     @CollectionTable(name = "tb_contest_participant", joinColumns = @JoinColumn(name = "contest_id", referencedColumnName = "code"))
     private List<Long> participantIds;
@@ -64,5 +71,11 @@ public class Contest {
 
     public boolean hasParticipant(Long userId) {
         return participantIds != null && participantIds.contains(userId);
+    }
+
+    // 대회 종료
+    public void end() {
+        this.status = ContestStatus.ENDED;
+        this.endDate = LocalDate.now();
     }
 }

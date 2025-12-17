@@ -30,13 +30,18 @@ public record ContestListRes(
         }
 
         int count = contest.getParticipantIds() == null ? 0 : contest.getParticipantIds().size();
-        ContestStatus status;
-        if (end.isBefore(today)) {
-            status = ContestStatus.ENDED;
-        } else if (contest.getParticipantIds() != null && userId != null && contest.getParticipantIds().contains(userId)) {
-            status = ContestStatus.JOINED;
-        } else {
-            status = ContestStatus.JOINABLE;
+
+        // Contest에 status가 명시되어 있으면 우선 사용 (관리자가 강제 종료한 경우)
+        ContestStatus status = contest.getStatus();
+        if (status != ContestStatus.ENDED) {
+            // 날짜로 종료 여부 판단
+            if (end.isBefore(today)) {
+                status = ContestStatus.ENDED;
+            } else if (contest.getParticipantIds() != null && userId != null && contest.getParticipantIds().contains(userId)) {
+                status = ContestStatus.JOINED;
+            } else {
+                status = ContestStatus.JOINABLE;
+            }
         }
 
         return new ContestListRes(contest.getCode(), contest.getTitle(), dDayStr, count, status);
