@@ -5,10 +5,13 @@ import com.ducami.dukkaebi.domain.grading.model.ExecutionResult;
 import com.ducami.dukkaebi.domain.grading.presentation.dto.response.JudgeResultRes;
 import com.ducami.dukkaebi.domain.grading.util.CodeExecutor;
 import com.ducami.dukkaebi.domain.problem.domain.Problem;
+import com.ducami.dukkaebi.domain.problem.domain.ProblemHistory;
 import com.ducami.dukkaebi.domain.problem.domain.ProblemTestCase;
+import com.ducami.dukkaebi.domain.problem.domain.enums.DifficultyType;
+import com.ducami.dukkaebi.domain.problem.domain.enums.SolvedResult;
+import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemHistoryJpaRepo;
 import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemJpaRepo;
 import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemTestCaseJpaRepo;
-import com.ducami.dukkaebi.domain.problem.domain.enums.DifficultyType;
 import com.ducami.dukkaebi.domain.user.domain.User;
 import com.ducami.dukkaebi.domain.user.domain.repo.UserJpaRepo;
 import com.ducami.dukkaebi.domain.user.service.UserActivityService;
@@ -28,10 +31,11 @@ import java.util.List;
 public class JudgeService {
     private final ProblemJpaRepo problemJpaRepo;
     private final ProblemTestCaseJpaRepo testCaseJpaRepo;
+    private final ProblemHistoryJpaRepo problemHistoryJpaRepo;
     private final CodeExecutor codeExecutor;
     private final UserSessionHolder userSessionHolder;
     private final UserJpaRepo userJpaRepo;
-    private final UserActivityService userActivityService; // 추가
+    private final UserActivityService userActivityService;
 
     /**
      * 백준 스타일 코드 채점
@@ -150,6 +154,34 @@ public class JudgeService {
             } catch (Exception e) {
                 log.error("점수/활동 갱신 실패: {}", e.getMessage(), e);
             }
+        }
+
+        // ProblemHistory 업데이트 (제출 여부 기록)
+        try {
+            User sessionUser = userSessionHolder.getUser();
+            User user = userJpaRepo.findById(sessionUser.getId())
+                    .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+            // 기존 히스토리 조회 또는 새로 생성
+            ProblemHistory history = problemHistoryJpaRepo
+                    .findByUser_IdAndProblem_ProblemId(user.getId(), problemId)
+                    .orElse(ProblemHistory.builder()
+                            .user(user)
+                            .problem(problem)
+                            .solvedResult(SolvedResult.NOT_SOLVED)
+                            .build());
+
+            // 정답이면 SOLVED, 오답이면 FAILED로 업데이트
+            SolvedResult result = (finalStatus == JudgeStatus.ACCEPTED)
+                    ? SolvedResult.SOLVED
+                    : SolvedResult.FAILED;
+            history.updateSolvedResult(result);
+
+            problemHistoryJpaRepo.save(history);
+            log.info("ProblemHistory 업데이트 - userId: {}, problemId: {}, result: {}",
+                    user.getId(), problemId, result);
+        } catch (Exception e) {
+            log.error("ProblemHistory 업데이트 실패: {}", e.getMessage(), e);
         }
 
         log.info("채점 완료 - status: {}, passed: {}/{}", finalStatus, passedCount, testCases.size());
