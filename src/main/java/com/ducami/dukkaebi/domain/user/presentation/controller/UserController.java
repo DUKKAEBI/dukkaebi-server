@@ -1,5 +1,6 @@
 package com.ducami.dukkaebi.domain.user.presentation.controller;
 
+import com.ducami.dukkaebi.domain.user.presentation.dto.request.UserFilterReq;
 import com.ducami.dukkaebi.domain.user.presentation.dto.response.UserInfoRes;
 import com.ducami.dukkaebi.domain.user.presentation.dto.response.UserListRes;
 import com.ducami.dukkaebi.domain.user.usecase.UserUseCase;
@@ -10,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,6 +42,18 @@ public class UserController {
     @Operation(summary = "특정 사용자 정보 조회")
     public UserInfoRes getUserInfoById(@PathVariable("userId") Long userId) {
         return userUseCase.getUserInfoById(userId);
+    }
+
+    @GetMapping("/list/filter")
+    @Operation(
+            summary = "사용자 목록 검색 및 정렬",
+            description = """
+                    - keyword: 닉네임 또는 로그인 아이디로 검색
+                    - sortBy: 정렬 기준 (NICKNAME, LOGIN_ID, GROWTH)
+                    """
+    )
+    public List<UserListRes> getFilteredUsers(@ModelAttribute UserFilterReq filter) {
+        return userUseCase.getFilteredUsers(filter);
     }
 
     @PostMapping("/logout")

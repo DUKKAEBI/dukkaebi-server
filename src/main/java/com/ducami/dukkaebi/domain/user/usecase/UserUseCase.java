@@ -4,9 +4,11 @@ import com.ducami.dukkaebi.domain.user.domain.User;
 import com.ducami.dukkaebi.domain.user.domain.enums.UserType;
 import com.ducami.dukkaebi.domain.user.domain.repo.UserJpaRepo;
 import com.ducami.dukkaebi.domain.user.error.UserErrorCode;
+import com.ducami.dukkaebi.domain.user.presentation.dto.request.UserFilterReq;
 import com.ducami.dukkaebi.domain.user.presentation.dto.response.UserInfoRes;
 import com.ducami.dukkaebi.domain.user.presentation.dto.response.UserListRes;
 import com.ducami.dukkaebi.domain.user.service.UserDeleteService;
+import com.ducami.dukkaebi.domain.user.service.UserFilterService;
 import com.ducami.dukkaebi.global.common.Response;
 import com.ducami.dukkaebi.global.exception.CustomException;
 import com.ducami.dukkaebi.global.security.auth.UserSessionHolder;
@@ -27,6 +29,7 @@ public class UserUseCase {
     private final UserSessionHolder userSessionHolder;
     private final UserJpaRepo userJpaRepo;
     private final UserDeleteService userDeleteService;
+    private final UserFilterService userFilterService;
 
     public UserInfoRes getUserInfo() {
         User user = userSessionHolder.getUser();
@@ -44,6 +47,13 @@ public class UserUseCase {
         User user = userJpaRepo.findById(userId)
                 .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
         return UserInfoRes.from(user);
+    }
+
+    public List<UserListRes> getFilteredUsers(UserFilterReq filter) {
+        List<User> users = userJpaRepo.findAll();
+        return userFilterService.filterAndSortUsers(users, filter).stream()
+                .map(UserListRes::from)
+                .toList();
     }
 
     public Response logout(HttpServletRequest req) {
