@@ -70,7 +70,7 @@ public class ContestUseCase {
             problemResList.add(ProblemRes.from(p, history));
         }
 
-        return ContestDetailRes.from(contest, problemResList);
+        return ContestDetailRes.from(contest, problemResList, userId);
     }
 
     // 관리자
