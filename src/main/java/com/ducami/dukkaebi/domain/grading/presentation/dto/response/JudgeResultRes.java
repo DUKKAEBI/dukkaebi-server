@@ -15,7 +15,8 @@ public record JudgeResultRes(
     public record TestCaseResult(
             Integer testCaseNumber,
             Boolean passed,
-            String expectedOutput,
-            String actualOutput
+            String input,              // 입력값
+            String expectedOutput,     // 예상 출력
+            String actualOutput        // 실제 출력
     ) {}
 }

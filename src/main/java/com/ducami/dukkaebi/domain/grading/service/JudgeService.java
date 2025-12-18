@@ -89,7 +89,7 @@ public class JudgeService {
                     errorMessage = result.error();
 
                     results.add(new JudgeResultRes.TestCaseResult(
-                            i + 1, false, testCase.getOutput(), result.error()
+                            i + 1, false, testCase.getInput(), testCase.getOutput(), result.error()
                     ));
                     break;
                 }
@@ -100,7 +100,7 @@ public class JudgeService {
                     errorMessage = "시간 초과";
 
                     results.add(new JudgeResultRes.TestCaseResult(
-                            i + 1, false, testCase.getOutput(), "시간 초과"
+                            i + 1, false, testCase.getInput(), testCase.getOutput(), "시간 초과"
                     ));
                     break;
                 }
@@ -119,6 +119,7 @@ public class JudgeService {
                 results.add(new JudgeResultRes.TestCaseResult(
                         i + 1,
                         passed,
+                        testCase.getInput(),
                         testCase.getOutput(),
                         result.output()
                 ));
@@ -134,7 +135,7 @@ public class JudgeService {
                 errorMessage = e.getMessage();
 
                 results.add(new JudgeResultRes.TestCaseResult(
-                        i + 1, false, testCase.getOutput(), "실행 에러: " + e.getMessage()
+                        i + 1, false, testCase.getInput(), testCase.getOutput(), "실행 에러: " + e.getMessage()
                 ));
                 break;
             }
