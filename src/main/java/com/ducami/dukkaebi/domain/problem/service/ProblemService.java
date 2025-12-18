@@ -208,9 +208,6 @@ public class ProblemService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 시간 기준 정렬
-     */
     private List<ProblemRes> sortByTime(List<ProblemRes> problems, String time) {
         Comparator<ProblemRes> comparator = Comparator.comparing(
                 ProblemRes::addedAt,
