@@ -11,6 +11,8 @@ import com.ducami.dukkaebi.domain.course.presentation.dto.response.CourseListWit
 import com.ducami.dukkaebi.domain.course.presentation.dto.response.CourseStudentItemRes;
 import com.ducami.dukkaebi.domain.course.service.CourseProgressService;
 import com.ducami.dukkaebi.domain.problem.domain.Problem;
+import com.ducami.dukkaebi.domain.problem.domain.ProblemHistory;
+import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemHistoryJpaRepo;
 import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemJpaRepo;
 import com.ducami.dukkaebi.domain.problem.error.ProblemErrorCode;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemRes;
@@ -30,6 +32,7 @@ import java.util.List;
 public class CourseUseCase {
     private final CourseJpaRepo courseJpaRepo;
     private final ProblemJpaRepo problemJpaRepo;
+    private final ProblemHistoryJpaRepo problemHistoryJpaRepo;
     private final CourseProgressService courseProgressService;
     private final UserSessionHolder userSessionHolder;
 
@@ -45,16 +48,26 @@ public class CourseUseCase {
         Course course = courseJpaRepo.findById(courseId)
                 .orElseThrow(() -> new CustomException(CourseErrorCode.COURSE_NOT_FOUND));
 
+        // 현재 사용자 ID 조회
+        Long userId = null;
+        try { userId = userSessionHolder.getUserId(); } catch (Exception ignored) {}
+        final Long finalUserId = userId;
+
         List<Long> problemIds = course.getProblemIds();
         List<ProblemRes> problems = problemIds == null || problemIds.isEmpty()
                 ? List.of()
                 : problemJpaRepo.findAllById(problemIds).stream()
-                .map((Problem p) -> ProblemRes.from(p, null))
+                .map((Problem p) -> {
+                    ProblemHistory history = null;
+                    if (finalUserId != null) {
+                        history = problemHistoryJpaRepo.findByUser_IdAndProblem_ProblemId(finalUserId, p.getProblemId()).orElse(null);
+                    }
+                    return ProblemRes.from(p, history);
+                })
                 .toList();
 
         // 수강 여부, 진행도, 상태 계산
-        Long userId = userSessionHolder.getUserId();
-        boolean isEnrolled = course.hasParticipant(userId);
+        boolean isEnrolled = userId != null && course.hasParticipant(userId);
         int progressPercent = courseProgressService.calculateProgressPercent(course);
         CourseStatus status = courseProgressService.calculateCourseStatus(course);
 

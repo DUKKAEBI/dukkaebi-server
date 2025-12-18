@@ -28,4 +28,8 @@ public class ProblemHistory {
     @Enumerated(EnumType.STRING)
     @Column(name = "sovledResult")
     private SolvedResult solvedResult;
+
+    public void updateSolvedResult(SolvedResult solvedResult) {
+        this.solvedResult = solvedResult;
+    }
 }

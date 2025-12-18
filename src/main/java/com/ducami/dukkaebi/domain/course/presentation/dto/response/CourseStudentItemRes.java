@@ -4,10 +4,13 @@ import com.ducami.dukkaebi.domain.course.domain.Course;
 import com.ducami.dukkaebi.domain.course.domain.enums.CourseStatus;
 import com.ducami.dukkaebi.domain.course.domain.enums.LevelType;
 
+import java.util.List;
+
 public record CourseStudentItemRes(
         Long courseId,
         String title,
         LevelType level,
+        List<String> keywords,
         int progressPercent,
         CourseStatus status
 ) {
@@ -16,6 +19,7 @@ public record CourseStudentItemRes(
                 course.getId(),
                 course.getTitle(),
                 course.getLevel(),
+                course.getKeywords(),
                 progressPercent,
                 status
         );
