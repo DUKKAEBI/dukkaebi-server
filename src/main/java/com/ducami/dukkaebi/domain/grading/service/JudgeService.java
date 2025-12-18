@@ -156,6 +156,19 @@ public class JudgeService {
             }
         }
 
+        // Problem의 solvedCount, attemptCount 업데이트
+        try {
+            problem.incrementAttemptCount();
+            if (finalStatus == JudgeStatus.ACCEPTED) {
+                problem.incrementSolvedCount();
+            }
+            problemJpaRepo.save(problem);
+            log.info("Problem 통계 업데이트 - problemId: {}, solvedCount: {}, attemptCount: {}",
+                    problemId, problem.getSolvedCount(), problem.getAttemptCount());
+        } catch (Exception e) {
+            log.error("Problem 통계 업데이트 실패: {}", e.getMessage(), e);
+        }
+
         // ProblemHistory 업데이트 (제출 여부 기록)
         try {
             User sessionUser = userSessionHolder.getUser();
@@ -200,7 +213,7 @@ public class JudgeService {
         return switch (difficulty) {
             case COPPER -> 1;   // 구리
             case IRON -> 3;     // 철
-            case SLIVER -> 5;   // 은 (오타 주의: SLIVER)
+            case SILVER -> 5;   // 은
             case GOLD -> 10;    // 금
             case JADE -> 15;    // 옥
         };

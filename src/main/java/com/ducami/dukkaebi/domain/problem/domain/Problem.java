@@ -35,10 +35,10 @@ public class Problem {
     private DifficultyType difficulty;
 
     @Column(nullable = false)
-    private Integer solvedCount = 0;
+    private Integer solvedCount;
 
     @Column(nullable = false)
-    private Integer attemptCount = 0;
+    private Integer attemptCount;
 
     @Column(nullable = false)
     private LocalDate addedAt;
