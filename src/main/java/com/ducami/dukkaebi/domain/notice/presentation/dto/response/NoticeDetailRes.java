@@ -1,0 +1,21 @@
+package com.ducami.dukkaebi.domain.notice.presentation.dto.response;
+
+import com.ducami.dukkaebi.domain.notice.domain.Notice;
+
+import java.time.LocalDate;
+
+public record NoticeDetailRes(
+        String title,
+        String writer,
+        String content,
+        LocalDate createdAt
+){
+    public static NoticeDetailRes from(Notice notice) {
+        return new NoticeDetailRes(
+                notice.getTitle(),
+                notice.getContent(),
+                notice.getWriter(),
+                notice.getCreatedAt().toLocalDate()
+        );
+    }
+}
