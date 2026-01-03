@@ -13,8 +13,8 @@ public record NoticeDetailRes(
     public static NoticeDetailRes from(Notice notice) {
         return new NoticeDetailRes(
                 notice.getTitle(),
-                notice.getContent(),
                 notice.getWriter(),
+                notice.getContent(),
                 notice.getCreatedAt().toLocalDate()
         );
     }
