@@ -3,6 +3,7 @@ package com.ducami.dukkaebi.domain.notice.presentation.controller;
 import com.ducami.dukkaebi.domain.notice.presentation.dto.request.NoticeReq;
 import com.ducami.dukkaebi.domain.notice.usecase.NoticeUseCase;
 import com.ducami.dukkaebi.global.common.Response;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,22 +16,25 @@ import org.springframework.web.bind.annotation.*;
 public class NoticeAdminController {
     private final NoticeUseCase noticeUseCase;
 
-    @PostMapping()
-    public ResponseEntity<Response> createNotice(@ModelAttribute NoticeReq req) {
+    @PostMapping("/create")
+    @Operation(summary = "공지사항 생성")
+    public ResponseEntity<Response> createNotice(@RequestBody NoticeReq req) {
         Response response = noticeUseCase.createNotice(req);
         return ResponseEntity.status(201).body(response);
     }
 
-    @PutMapping(value = "/{noticeId}")
+    @PutMapping(value = "/update/{noticeId}")
+    @Operation(summary = "공지사항 수정")
     public ResponseEntity<Response> updateNotice(
             @PathVariable Long noticeId,
-            @ModelAttribute NoticeReq req
+            @RequestBody NoticeReq req
     ) {
         Response response = noticeUseCase.updateNotice(noticeId, req);
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/{noticeId}")
+    @DeleteMapping("/delete/{noticeId}")
+    @Operation(summary = "공지사항 삭제")
     public ResponseEntity<Response> deleteNotice(@PathVariable Long noticeId) {
         Response response = noticeUseCase.deleteNotice(noticeId);
         return ResponseEntity.ok(response);

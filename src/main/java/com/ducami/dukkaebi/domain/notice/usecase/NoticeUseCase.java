@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class NoticeUseCase {
@@ -29,11 +31,10 @@ public class NoticeUseCase {
     }
 
     @Transactional(readOnly = true)
-    public Page<NoticeListRes> searchNotices(
-            String keyword,
-            Pageable pageable) {
-        return noticeJpaRepo.searchByKeyword(keyword, pageable)
-                .map(NoticeListRes::from);
+    public List<NoticeListRes> searchNotices(
+            String keyword) {
+        return noticeJpaRepo.searchByKeyword(keyword)
+                .stream().map(NoticeListRes::from).toList();
     }
 
     @Transactional
