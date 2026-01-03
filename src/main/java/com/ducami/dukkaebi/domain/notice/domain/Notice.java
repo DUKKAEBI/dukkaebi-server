@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Getter
 @Entity
 @SuperBuilder
-@Table(name = "tb_course")
+@Table(name = "tb_notice")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Notice {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
