@@ -100,13 +100,8 @@ jobs:
               sudo docker rm $CONTAINER_NAME
             fi
 
-            if sudo docker images | grep -q "$IMAGE_NAME"; then
-              echo "이전 이미지 삭제"
-              sudo docker rmi $IMAGE_NAME
-            fi
-
-            echo "불필요한 도커 리소스 정리"
-            sudo docker system prune -af   # --volumes 제거
+            # ✅ 사용하지 않는 이미지만 정리 (안전)
+            sudo docker image prune -af
 
             sudo docker pull $IMAGE_NAME
             sudo docker run -d -p 8080:8080 --name $CONTAINER_NAME $IMAGE_NAME
