@@ -147,9 +147,9 @@ public class JudgeService {
             }
         }
 
-        // 정답 처리 시 점수 부여
-        if (finalStatus == JudgeStatus.ACCEPTED) {
-            int reward = difficultyToScore(problem.getDifficulty());
+        // 정답 처리 시 점수 부여 (일반 문제만 - 대회 문제는 별도 처리)
+        if (finalStatus == JudgeStatus.ACCEPTED && problem.getContestId() == null) {
+            Integer reward = difficultyToScore(problem.getDifficulty());
             try {
                 User sessionUser = userSessionHolder.getUser();
                 User user = userJpaRepo.findById(sessionUser.getId())
@@ -157,7 +157,7 @@ public class JudgeService {
                 user.addScore(reward);
                 // 일일 활동 1 증가 (정답 1건)
                 userActivityService.increaseTodaySolvedCount(1);
-                log.info("점수/활동 갱신 - userId: {}, +{}점, 오늘 푼 문제 +1", user.getId(), reward);
+                log.info("점수/활동 갱신 (일반 문제) - userId: {}, +{}점, 오늘 푼 문제 +1", user.getId(), reward);
             } catch (Exception e) {
                 log.error("점수/활동 갱신 실패: {}", e.getMessage(), e);
             }
