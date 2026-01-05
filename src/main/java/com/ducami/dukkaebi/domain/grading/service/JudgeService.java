@@ -249,18 +249,18 @@ public class JudgeService {
                             .timeSpentSeconds(0)
                             .build());
 
-            // 정답인 경우 점수 부여
+            // 정답인 경우 점수 부여, 아니면 0점
+            Integer earnedScore = 0;
             if (status == JudgeStatus.ACCEPTED) {
-                Integer earnedScore = problem.getScore() != null ? problem.getScore() : 0;
-                problemScore.updateScore(earnedScore);
+                earnedScore = problem.getScore() != null ? problem.getScore() : 0;
             }
 
-            // 소요 시간 업데이트 (누적이 아닌 최신 제출 시간으로 갱신)
+            // 점수와 시간을 업데이트하여 저장
             contestProblemScoreJpaRepo.save(ContestProblemScore.builder()
                     .id(problemScore.getId())
-                    .participant(problemScore.getParticipant())
-                    .problem(problemScore.getProblem())
-                    .earnedScore(problemScore.getEarnedScore())
+                    .participant(participant)
+                    .problem(problem)
+                    .earnedScore(earnedScore)
                     .timeSpentSeconds(timeSpentSeconds)
                     .build());
 
@@ -279,8 +279,8 @@ public class JudgeService {
             participant.updateTotalTime(totalTime);
             contestParticipantJpaRepo.save(participant);
 
-            log.info("대회 참여자 점수 업데이트 - userId: {}, contestCode: {}, totalScore: {}, totalTime: {}초",
-                    user.getId(), contestCode, totalScore, totalTime);
+            log.info("대회 참여자 점수 업데이트 - userId: {}, contestCode: {}, earnedScore: {}, totalScore: {}, totalTime: {}초",
+                    user.getId(), contestCode, earnedScore, totalScore, totalTime);
 
         } catch (Exception e) {
             log.error("대회 참여자 점수 업데이트 실패: {}", e.getMessage(), e);
