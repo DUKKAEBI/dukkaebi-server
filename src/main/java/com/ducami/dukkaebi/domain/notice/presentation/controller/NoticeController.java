@@ -17,7 +17,7 @@ import java.util.List;
 @Tag(name = "공지 API")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("notice")
+@RequestMapping("/notice")
 public class NoticeController {
     private final NoticeUseCase noticeUseCase;
 

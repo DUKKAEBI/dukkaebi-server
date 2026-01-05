@@ -17,13 +17,14 @@ public class JudgeUseCase {
 
     public JudgeResultRes submitCode(CodeSubmitReq request) {
         try {
-            log.info("코드 제출 - problemId: {}, language: {}",
-                    request.problemId(), request.language());
+            log.info("코드 제출 - problemId: {}, language: {}, timeSpent: {}초",
+                    request.problemId(), request.language(), request.timeSpentSeconds());
 
             JudgeResultRes result = judgeService.judgeCode(
                     request.problemId(),
                     request.code(),
-                    request.language()
+                    request.language(),
+                    request.timeSpentSeconds()
             );
 
             log.info("채점 완료 - status: {}, passed: {}/{}",

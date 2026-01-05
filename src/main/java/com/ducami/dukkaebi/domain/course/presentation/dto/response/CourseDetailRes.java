@@ -17,14 +17,14 @@ public record CourseDetailRes(
         LevelType level,
         List<ProblemRes> problems,
         boolean isEnrolled,        // 수강 여부
-        int progressPercent,       // 진행도 (0~100)
+        Integer progressPercent,   // 진행도 (0~100)
         CourseStatus status        // 코스 상태
 ) {
     public static CourseDetailRes from(
             Course course,
             List<ProblemRes> problems,
             boolean isEnrolled,
-            int progressPercent,
+            Integer progressPercent,
             CourseStatus status
     ) {
         return CourseDetailRes.builder()

@@ -44,6 +44,13 @@ public class CourseUseCase {
     }
 
     @Transactional(readOnly = true)
+    public List<CourseListRes> getCourseWithName(String name) {
+        return courseJpaRepo.findByTitleContainingIgnoreCase(name).stream()
+                .map(CourseListRes::from)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public CourseDetailRes getCourseDetail(Long courseId) {
         Course course = courseJpaRepo.findById(courseId)
                 .orElseThrow(() -> new CustomException(CourseErrorCode.COURSE_NOT_FOUND));
@@ -68,7 +75,7 @@ public class CourseUseCase {
 
         // 수강 여부, 진행도, 상태 계산
         boolean isEnrolled = userId != null && course.hasParticipant(userId);
-        int progressPercent = courseProgressService.calculateProgressPercent(course);
+        Integer progressPercent = courseProgressService.calculateProgressPercent(course);
         CourseStatus status = courseProgressService.calculateCourseStatus(course);
 
         return CourseDetailRes.from(course, problems, isEnrolled, progressPercent, status);
@@ -126,7 +133,7 @@ public class CourseUseCase {
     public List<CourseStudentItemRes> getInProgressCourses() {
         return courseJpaRepo.findAll().stream()
                 .map(c -> {
-                    int progress = courseProgressService.calculateProgressPercent(c);
+                    Integer progress = courseProgressService.calculateProgressPercent(c);
                     CourseStatus status = courseProgressService.calculateCourseStatus(c);
                     return CourseStudentItemRes.from(c, progress, status);
                 })
@@ -139,7 +146,7 @@ public class CourseUseCase {
     public CourseListWithCountRes getCompletedCourses() {
         List<CourseStudentItemRes> allCourses = courseJpaRepo.findAll().stream()
                 .map(c -> {
-                    int progress = courseProgressService.calculateProgressPercent(c);
+                    Integer progress = courseProgressService.calculateProgressPercent(c);
                     CourseStatus status = courseProgressService.calculateCourseStatus(c);
                     return CourseStudentItemRes.from(c, progress, status);
                 })
@@ -151,7 +158,7 @@ public class CourseUseCase {
                 .toList();
 
         // 진행 중인 코스 개수 계산
-        int inProgressCount = (int) allCourses.stream()
+        Integer inProgressCount = (int) allCourses.stream()
                 .filter(item -> item.status() == CourseStatus.IN_PROGRESS)
                 .count();
 
@@ -163,7 +170,7 @@ public class CourseUseCase {
     public List<CourseStudentItemRes> getJoinableCourses() {
         return courseJpaRepo.findAll().stream()
                 .map(c -> {
-                    int progress = courseProgressService.calculateProgressPercent(c);
+                    Integer progress = courseProgressService.calculateProgressPercent(c);
                     CourseStatus status = courseProgressService.calculateCourseStatus(c);
                     return CourseStudentItemRes.from(c, progress, status);
                 })

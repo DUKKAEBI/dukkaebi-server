@@ -1,5 +1,9 @@
 package com.ducami.dukkaebi.domain.grading.service;
 
+import com.ducami.dukkaebi.domain.contest.domain.ContestParticipant;
+import com.ducami.dukkaebi.domain.contest.domain.ContestProblemScore;
+import com.ducami.dukkaebi.domain.contest.domain.repo.ContestParticipantJpaRepo;
+import com.ducami.dukkaebi.domain.contest.domain.repo.ContestProblemScoreJpaRepo;
 import com.ducami.dukkaebi.domain.grading.domain.enums.JudgeStatus;
 import com.ducami.dukkaebi.domain.grading.model.ExecutionResult;
 import com.ducami.dukkaebi.domain.grading.presentation.dto.response.JudgeResultRes;
@@ -36,6 +40,8 @@ public class JudgeService {
     private final UserSessionHolder userSessionHolder;
     private final UserJpaRepo userJpaRepo;
     private final UserActivityService userActivityService;
+    private final ContestParticipantJpaRepo contestParticipantJpaRepo;
+    private final ContestProblemScoreJpaRepo contestProblemScoreJpaRepo;
 
     /**
      * 백준 스타일 코드 채점
@@ -45,8 +51,8 @@ public class JudgeService {
      */
 
     @Transactional // 점수 업데이트를 위해 쓰기 트랜잭션
-    public JudgeResultRes judgeCode(Long problemId, String code, String language) {
-        log.info("코드 채점 시작 - problemId: {}, language: {}", problemId, language);
+    public JudgeResultRes judgeCode(Long problemId, String code, String language, Integer timeSpentSeconds) {
+        log.info("코드 채점 시작 - problemId: {}, language: {}, timeSpent: {}초", problemId, language, timeSpentSeconds);
 
         // 1. 문제 조회
         Problem problem = problemJpaRepo.findById(problemId)
@@ -200,6 +206,11 @@ public class JudgeService {
 
         log.info("채점 완료 - status: {}, passed: {}/{}", finalStatus, passedCount, testCases.size());
 
+        // 대회 문제인 경우 참여자 점수 및 시간 업데이트
+        if (problem.getContestId() != null && timeSpentSeconds != null) {
+            updateContestParticipantScore(problem, finalStatus, timeSpentSeconds);
+        }
+
         return new JudgeResultRes(
                 finalStatus,
                 passedCount,
@@ -208,6 +219,72 @@ public class JudgeService {
                 errorMessage,
                 results
         );
+    }
+
+    /**
+     * 대회 참여자의 점수 및 시간 업데이트
+     */
+    private void updateContestParticipantScore(Problem problem, JudgeStatus status, Integer timeSpentSeconds) {
+        try {
+            User user = userSessionHolder.getUser();
+            String contestCode = problem.getContestId();
+
+            // 참여자 정보 조회
+            ContestParticipant participant = contestParticipantJpaRepo
+                    .findByContest_CodeAndUser_Id(contestCode, user.getId())
+                    .orElse(null);
+
+            if (participant == null) {
+                log.warn("대회 참여자 정보를 찾을 수 없습니다 - userId: {}, contestCode: {}", user.getId(), contestCode);
+                return;
+            }
+
+            // 문제별 점수 조회 또는 생성
+            ContestProblemScore problemScore = contestProblemScoreJpaRepo
+                    .findByParticipant_IdAndProblem_ProblemId(participant.getId(), problem.getProblemId())
+                    .orElse(ContestProblemScore.builder()
+                            .participant(participant)
+                            .problem(problem)
+                            .earnedScore(0)
+                            .timeSpentSeconds(0)
+                            .build());
+
+            // 정답인 경우 점수 부여
+            if (status == JudgeStatus.ACCEPTED) {
+                Integer earnedScore = problem.getScore() != null ? problem.getScore() : 0;
+                problemScore.updateScore(earnedScore);
+            }
+
+            // 소요 시간 업데이트 (누적이 아닌 최신 제출 시간으로 갱신)
+            contestProblemScoreJpaRepo.save(ContestProblemScore.builder()
+                    .id(problemScore.getId())
+                    .participant(problemScore.getParticipant())
+                    .problem(problemScore.getProblem())
+                    .earnedScore(problemScore.getEarnedScore())
+                    .timeSpentSeconds(timeSpentSeconds)
+                    .build());
+
+            // 총 점수 및 총 소요시간 재계산
+            List<ContestProblemScore> allScores = contestProblemScoreJpaRepo.findByParticipant_Id(participant.getId());
+
+            Integer totalScore = allScores.stream()
+                    .map(ContestProblemScore::getEarnedScore)
+                    .reduce(0, Integer::sum);
+
+            Integer totalTime = allScores.stream()
+                    .map(ContestProblemScore::getTimeSpentSeconds)
+                    .reduce(0, Integer::sum);
+
+            participant.updateTotalScore(totalScore);
+            participant.updateTotalTime(totalTime);
+            contestParticipantJpaRepo.save(participant);
+
+            log.info("대회 참여자 점수 업데이트 - userId: {}, contestCode: {}, totalScore: {}, totalTime: {}초",
+                    user.getId(), contestCode, totalScore, totalTime);
+
+        } catch (Exception e) {
+            log.error("대회 참여자 점수 업데이트 실패: {}", e.getMessage(), e);
+        }
     }
 
     private int difficultyToScore(DifficultyType difficulty) {

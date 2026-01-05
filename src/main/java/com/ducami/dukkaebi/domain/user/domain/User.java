@@ -38,13 +38,13 @@ public class User {
     private UserType role;
 
     @Column(nullable = false)
-    private int score;
+    private Integer score;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private GrowthType growth;
 
-    public void addScore(int amount) {
+    public void addScore(Integer amount) {
         this.score += amount;
         this.growth = GrowthType.fromScore(this.score);
     }

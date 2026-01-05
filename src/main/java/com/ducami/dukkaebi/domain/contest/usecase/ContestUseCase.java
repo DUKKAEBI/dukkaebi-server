@@ -1,13 +1,20 @@
 package com.ducami.dukkaebi.domain.contest.usecase;
 
 import com.ducami.dukkaebi.domain.contest.domain.Contest;
+import com.ducami.dukkaebi.domain.contest.domain.ContestParticipant;
+import com.ducami.dukkaebi.domain.contest.domain.ContestProblemScore;
 import com.ducami.dukkaebi.domain.contest.domain.repo.ContestJpaRepo;
+import com.ducami.dukkaebi.domain.contest.domain.repo.ContestParticipantJpaRepo;
+import com.ducami.dukkaebi.domain.contest.domain.repo.ContestProblemScoreJpaRepo;
 import com.ducami.dukkaebi.domain.contest.error.ContestErrorCode;
 import com.ducami.dukkaebi.domain.contest.presentation.dto.request.ContestReq;
+import com.ducami.dukkaebi.domain.contest.presentation.dto.request.ContestScoreUpdateReq;
 import com.ducami.dukkaebi.domain.contest.presentation.dto.response.ContestDetailRes;
 import com.ducami.dukkaebi.domain.contest.presentation.dto.response.ContestListRes;
+import com.ducami.dukkaebi.domain.contest.presentation.dto.response.ContestParticipantListRes;
 import com.ducami.dukkaebi.domain.contest.util.CodeGenerator;
 import com.ducami.dukkaebi.domain.problem.error.ProblemErrorCode;
+import com.ducami.dukkaebi.domain.user.domain.User;
 import com.ducami.dukkaebi.global.common.Response;
 import com.ducami.dukkaebi.global.exception.CustomException;
 import com.ducami.dukkaebi.global.security.auth.UserSessionHolder;
@@ -19,7 +26,7 @@ import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemJpaRepo;
 import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemTestCaseJpaRepo;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.request.ProblemCreateReq;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemRes;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +39,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ContestUseCase {
     private final ContestJpaRepo contestJpaRepo;
+    private final ContestParticipantJpaRepo contestParticipantJpaRepo;
+    private final ContestProblemScoreJpaRepo contestProblemScoreJpaRepo;
     private final CodeGenerator codeGenerator;
     private final UserSessionHolder userSessionHolder;
     private final ProblemJpaRepo problemJpaRepo;
@@ -71,6 +80,16 @@ public class ContestUseCase {
         }
 
         return ContestDetailRes.from(contest, problemResList, userId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ContestListRes> getContestWithName(String name) {
+        Long userId = userSessionHolder.getUserId();
+
+        return contestJpaRepo.findByTitleContainingIgnoreCaseOrderByEndDateAsc(name)
+                .stream()
+                .map(contest -> ContestListRes.from(contest, userId))
+                .toList();
     }
 
     // 관리자
@@ -117,18 +136,32 @@ public class ContestUseCase {
         Contest contest = contestJpaRepo.findById(code)
                 .orElseThrow(() -> new CustomException(ContestErrorCode.CONTEST_NOT_FOUND));
 
-        LocalDate today = LocalDate.now(ZONE);
-        if (contest.getEndDate().isBefore(today)) {
+        LocalDateTime now = LocalDateTime.now(ZONE);
+        if (contest.getEndDate() != null && contest.getEndDate().isBefore(now)) {
             return Response.of(HttpStatus.BAD_REQUEST, "대회가 종료되었습니다.");
         }
 
         Long userId = userSessionHolder.getUserId();
-        if (contest.getParticipantIds().contains(userId)) {
+        User user = userSessionHolder.getUser();
+
+        if (contest.getParticipantIds() != null && contest.getParticipantIds().contains(userId)) {
             return Response.ok("이미 참여중입니다.");
         }
 
+        // Contest에 참여자 추가
         contest.addParticipant(userId);
         contestJpaRepo.save(contest);
+
+        // ContestParticipant 엔티티 생성 (점수/시간 추적용)
+        ContestParticipant participant = ContestParticipant.builder()
+                .contest(contest)
+                .user(user)
+                .totalScore(0)
+                .totalTimeSeconds(0)
+                .joinedAt(now)
+                .build();
+        contestParticipantJpaRepo.save(participant);
+
         return Response.ok("대회에 참가하였습니다.");
     }
 
@@ -203,5 +236,104 @@ public class ContestUseCase {
         contestJpaRepo.save(contest);
 
         return Response.ok("대회가 성공적으로 종료되었습니다.");
+    }
+
+    // 관리자: 대회 참여자 목록 조회 (등수 순)
+    @Transactional(readOnly = true)
+    public List<ContestParticipantListRes> getContestParticipants(String code) {
+        Contest contest = contestJpaRepo.findById(code)
+                .orElseThrow(() -> new CustomException(ContestErrorCode.CONTEST_NOT_FOUND));
+
+        List<ContestParticipant> participants = contestParticipantJpaRepo
+                .findByContest_CodeOrderByTotalScoreDescTotalTimeSecondsAsc(code);
+
+        List<Long> problemIds = contest.getProblemIds();
+        List<Problem> problems = problemIds == null || problemIds.isEmpty()
+                ? List.of()
+                : problemJpaRepo.findAllById(problemIds);
+
+        Integer rank = 1;
+        List<ContestParticipantListRes> result = new ArrayList<>();
+
+        for (ContestParticipant participant : participants) {
+            User user = participant.getUser();
+            List<ContestProblemScore> scores = contestProblemScoreJpaRepo.findByParticipant_Id(participant.getId());
+
+            List<ContestParticipantListRes.ProblemScoreDetail> problemScores = new ArrayList<>();
+            for (Problem problem : problems) {
+                ContestProblemScore score = scores.stream()
+                        .filter(s -> s.getProblem().getProblemId().equals(problem.getProblemId()))
+                        .findFirst()
+                        .orElse(null);
+
+                problemScores.add(ContestParticipantListRes.ProblemScoreDetail.builder()
+                        .problemId(problem.getProblemId())
+                        .earnedScore(score != null ? score.getEarnedScore() : 0)
+                        .maxScore(problem.getScore())
+                        .build());
+            }
+
+            result.add(ContestParticipantListRes.builder()
+                    .rank(rank++)
+                    .userId(user.getId())
+                    .nickname(user.getNickname())
+                    .totalScore(participant.getTotalScore())
+                    .totalTime(formatTime(participant.getTotalTimeSeconds()))
+                    .problemScores(problemScores)
+                    .build());
+        }
+
+        return result;
+    }
+
+    // 관리자: 참여자 점수 수정
+    @Transactional
+    public Response updateParticipantScore(String code, Long userId, ContestScoreUpdateReq req) {
+        Contest contest = contestJpaRepo.findById(code)
+                .orElseThrow(() -> new CustomException(ContestErrorCode.CONTEST_NOT_FOUND));
+
+        ContestParticipant participant = contestParticipantJpaRepo.findByContest_CodeAndUser_Id(code, userId)
+                .orElseThrow(() -> new CustomException(ContestErrorCode.PARTICIPANT_NOT_FOUND));
+
+        Problem problem = problemJpaRepo.findById(req.problemId())
+                .orElseThrow(() -> new CustomException(ProblemErrorCode.PROBLEM_NOT_FOUND));
+
+        // 대회 전용 문제인지 확인
+        if (!code.equals(problem.getContestId())) {
+            throw new CustomException(ContestErrorCode.NOT_CONTEST_PROBLEM);
+        }
+
+        // 해당 문제의 점수 업데이트
+        ContestProblemScore score = contestProblemScoreJpaRepo
+                .findByParticipant_IdAndProblem_ProblemId(participant.getId(), req.problemId())
+                .orElseGet(() -> ContestProblemScore.builder()
+                        .participant(participant)
+                        .problem(problem)
+                        .earnedScore(0)
+                        .timeSpentSeconds(0)
+                        .build());
+
+        score.updateScore(req.earnedScore());
+        contestProblemScoreJpaRepo.save(score);
+
+        // 총 점수 재계산
+        List<ContestProblemScore> allScores = contestProblemScoreJpaRepo.findByParticipant_Id(participant.getId());
+        Integer totalScore = allScores.stream()
+                .map(ContestProblemScore::getEarnedScore)
+                .reduce(0, Integer::sum);
+
+        participant.updateTotalScore(totalScore);
+        contestParticipantJpaRepo.save(participant);
+
+        return Response.ok("점수가 성공적으로 수정되었습니다.");
+    }
+
+    // 시간 포맷팅 (초 -> HH:MM:SS)
+    private String formatTime(Integer seconds) {
+        if (seconds == null || seconds == 0) return "00:00:00";
+        Integer hours = seconds / 3600;
+        Integer minutes = (seconds % 3600) / 60;
+        Integer secs = seconds % 60;
+        return String.format("%02d:%02d:%02d", hours, minutes, secs);
     }
 }

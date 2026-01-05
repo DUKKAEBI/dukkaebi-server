@@ -46,6 +46,9 @@ public class Problem {
     @Column
     private String contestId;
 
+    @Column
+    private Integer score;
+
     public void updateProblem(String name, String description, String input, String output, DifficultyType difficulty) {
         this.name = name;
         this.description = description;

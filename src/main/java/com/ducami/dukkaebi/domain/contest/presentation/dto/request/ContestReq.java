@@ -3,15 +3,15 @@ package com.ducami.dukkaebi.domain.contest.presentation.dto.request;
 import com.ducami.dukkaebi.domain.contest.domain.Contest;
 import com.ducami.dukkaebi.domain.contest.domain.enums.ContestStatus;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 public record ContestReq(
         String title,
         String description,
-        LocalDate startDate,
-        LocalDate endDate
+        LocalDateTime startDate,
+        LocalDateTime endDate
 ) {
     public static Contest fromReq(String code, ContestReq req) {
         return Contest.builder()

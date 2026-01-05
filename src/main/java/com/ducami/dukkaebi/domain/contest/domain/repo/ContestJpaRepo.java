@@ -10,4 +10,5 @@ import java.util.List;
 public interface ContestJpaRepo extends JpaRepository<Contest, String> {
     boolean existsByTitle(String title);
     List<Contest> findAllByOrderByEndDateAsc();
+    List<Contest> findByTitleContainingIgnoreCaseOrderByEndDateAsc(String name);
 }

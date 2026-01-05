@@ -13,6 +13,7 @@ public record ProblemRes (
         Long problemId,
         String name,
         DifficultyType difficulty,
+        Integer score,
         Integer solvedCount,
         Double correctRate,
         SolvedResult solvedResult,
@@ -23,6 +24,7 @@ public record ProblemRes (
                 problem.getProblemId(),
                 problem.getName(),
                 problem.getDifficulty(),
+                problem.getScore(),
                 problem.getSolvedCount(),
                 calculateCorrectRate(problem.getSolvedCount(), problem.getAttemptCount()),                getSolvedResult(history),
                 problem.getAddedAt()

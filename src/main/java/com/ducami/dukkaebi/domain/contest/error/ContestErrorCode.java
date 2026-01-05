@@ -10,7 +10,8 @@ import org.springframework.http.HttpStatus;
 public enum ContestErrorCode implements CustomErrorCode {
     TITLE_ALREADY(HttpStatus.CONFLICT, "이미 존재하는 대회명입니다."),
     CONTEST_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 대회를 찾을 수 없습니다."),
-    NOT_CONTEST_PROBLEM(HttpStatus.BAD_REQUEST, "해당 대회의 전용 문제가 아닙니다.");
+    NOT_CONTEST_PROBLEM(HttpStatus.BAD_REQUEST, "해당 대회의 전용 문제가 아닙니다."),
+    PARTICIPANT_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 참여자를 찾을 수 없습니다.");
 
     private final HttpStatus status;
     private final String message;

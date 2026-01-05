@@ -15,7 +15,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,11 +34,11 @@ public class Contest {
     @Column(nullable = false)
     private String description;
 
-    @Column(nullable = false)
-    private LocalDate startDate;
+    @Column
+    private LocalDateTime startDate;
 
-    @Column(nullable = false)
-    private LocalDate endDate;
+    @Column
+    private LocalDateTime endDate;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -52,7 +52,7 @@ public class Contest {
     @CollectionTable(name = "tb_contest_problem", joinColumns = @JoinColumn(name = "contest_id", referencedColumnName = "code"))
     private List<Long> problemIds;
 
-    public void updateContest(String title, String description, LocalDate startDate, LocalDate endDate) {
+    public void updateContest(String title, String description, LocalDateTime startDate, LocalDateTime endDate) {
         this.title = title;
         this.description = description;
         this.startDate = startDate;
@@ -76,6 +76,6 @@ public class Contest {
     // 대회 종료
     public void end() {
         this.status = ContestStatus.ENDED;
-        this.endDate = LocalDate.now();
+        this.endDate = LocalDateTime.now();
     }
 }

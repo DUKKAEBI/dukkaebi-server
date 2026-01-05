@@ -24,7 +24,7 @@ public class UserActivityUseCase {
     }
 
     public StreakRes getStreak() {
-        int streak = userActivityService.getCurrentStreak();
+        Integer streak = userActivityService.getCurrentStreak();
         return new StreakRes(streak);
     }
 }

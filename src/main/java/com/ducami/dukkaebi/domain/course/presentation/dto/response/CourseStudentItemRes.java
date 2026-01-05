@@ -11,10 +11,10 @@ public record CourseStudentItemRes(
         String title,
         LevelType level,
         List<String> keywords,
-        int progressPercent,
+        Integer progressPercent,
         CourseStatus status
 ) {
-    public static CourseStudentItemRes from(Course course, int progressPercent, CourseStatus status) {
+    public static CourseStudentItemRes from(Course course, Integer progressPercent, CourseStatus status) {
         return new CourseStudentItemRes(
                 course.getId(),
                 course.getTitle(),
