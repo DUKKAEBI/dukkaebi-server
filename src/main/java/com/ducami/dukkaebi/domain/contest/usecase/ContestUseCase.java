@@ -19,7 +19,7 @@ import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemJpaRepo;
 import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemTestCaseJpaRepo;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.request.ProblemCreateReq;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemRes;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
@@ -127,8 +127,8 @@ public class ContestUseCase {
         Contest contest = contestJpaRepo.findById(code)
                 .orElseThrow(() -> new CustomException(ContestErrorCode.CONTEST_NOT_FOUND));
 
-        LocalDate today = LocalDate.now(ZONE);
-        if (contest.getEndDate().isBefore(today)) {
+        LocalDateTime now = LocalDateTime.now(ZONE);
+        if (contest.getEndDate() != null && contest.getEndDate().isBefore(now)) {
             return Response.of(HttpStatus.BAD_REQUEST, "대회가 종료되었습니다.");
         }
 
