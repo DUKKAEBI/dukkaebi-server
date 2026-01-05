@@ -33,11 +33,13 @@ public class Course {
     private LevelType level;
 
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "tb_course_problem", joinColumns = @JoinColumn(name = "course_id"))
+    @CollectionTable(name = "tb_course_problem_ids", joinColumns = @JoinColumn(name = "course_id"))
+    @Column(name = "problem_id")
     private List<Long> problemIds;
 
     @ElementCollection
-    @CollectionTable(name = "tb_course_participant", joinColumns = @JoinColumn(name = "course_id"))
+    @CollectionTable(name = "tb_course_participant_ids", joinColumns = @JoinColumn(name = "course_id"))
+    @Column(name = "user_id")
     private List<Long> participantIds;
 
     public void updateCourse(String title, String description, List<String> keywords, LevelType level) {

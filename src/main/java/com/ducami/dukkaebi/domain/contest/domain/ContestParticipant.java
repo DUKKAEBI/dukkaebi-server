@@ -19,7 +19,7 @@ public class ContestParticipant {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "contest_code", nullable = false)
+    @JoinColumn(name = "contest_id", nullable = false, referencedColumnName = "code")
     private Contest contest;
 
     @ManyToOne(fetch = FetchType.LAZY)
