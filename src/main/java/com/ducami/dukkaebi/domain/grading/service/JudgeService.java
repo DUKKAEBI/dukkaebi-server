@@ -287,7 +287,8 @@ public class JudgeService {
         }
     }
 
-    private int difficultyToScore(DifficultyType difficulty) {
+    private Integer difficultyToScore(DifficultyType difficulty) {
+        if (difficulty == null) return 0;
         return switch (difficulty) {
             case COPPER -> 1;   // 구리
             case IRON -> 3;     // 철
