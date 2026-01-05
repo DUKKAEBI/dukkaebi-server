@@ -30,9 +30,9 @@ public class Problem {
     @Column(nullable = false)
     private String output;
 
-    @Column(nullable = false)
+    @Column
     @Enumerated(EnumType.STRING)
-    private DifficultyType difficulty;
+    private DifficultyType difficulty;  // 일반 문제용, 대회 문제는 null
 
     @Column(nullable = false)
     private Integer solvedCount;
@@ -44,10 +44,10 @@ public class Problem {
     private LocalDate addedAt;
 
     @Column
-    private String contestId;
+    private String contestId;  // 대회 전용 문제의 대회 코드
 
     @Column
-    private Integer score;
+    private Integer score;  // 대회 전용 문제의 점수
 
     public void updateProblem(String name, String description, String input, String output, DifficultyType difficulty) {
         this.name = name;

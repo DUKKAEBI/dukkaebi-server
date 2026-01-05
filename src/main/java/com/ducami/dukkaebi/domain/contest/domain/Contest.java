@@ -45,11 +45,13 @@ public class Contest {
     private ContestStatus status;
 
     @ElementCollection
-    @CollectionTable(name = "tb_contest_participant", joinColumns = @JoinColumn(name = "contest_id", referencedColumnName = "code"))
+    @CollectionTable(name = "tb_contest_participant_ids", joinColumns = @JoinColumn(name = "contest_id", referencedColumnName = "code"))
+    @Column(name = "user_id")
     private List<Long> participantIds;
 
     @ElementCollection
-    @CollectionTable(name = "tb_contest_problem", joinColumns = @JoinColumn(name = "contest_id", referencedColumnName = "code"))
+    @CollectionTable(name = "tb_contest_problem_ids", joinColumns = @JoinColumn(name = "contest_id", referencedColumnName = "code"))
+    @Column(name = "problem_id")
     private List<Long> problemIds;
 
     public void updateContest(String title, String description, LocalDateTime startDate, LocalDateTime endDate) {

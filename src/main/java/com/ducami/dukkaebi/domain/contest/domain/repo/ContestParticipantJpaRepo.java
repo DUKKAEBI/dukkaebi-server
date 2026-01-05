@@ -11,5 +11,6 @@ import java.util.Optional;
 public interface ContestParticipantJpaRepo extends JpaRepository<ContestParticipant, Long> {
     List<ContestParticipant> findByContest_CodeOrderByTotalScoreDescTotalTimeSecondsAsc(String contestCode);
     Optional<ContestParticipant> findByContest_CodeAndUser_Id(String contestCode, Long userId);
+    boolean existsByContest_CodeAndUser_Id(String contestCode, Long userId);
 }
 
