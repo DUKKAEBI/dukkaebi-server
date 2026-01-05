@@ -8,7 +8,7 @@ import lombok.Builder;
 public record UserInfoRes(
         Long id,
         String nickname,
-        int score,
+        Integer score,
         GrowthType growth
 ) {
     public static UserInfoRes from(User user) {

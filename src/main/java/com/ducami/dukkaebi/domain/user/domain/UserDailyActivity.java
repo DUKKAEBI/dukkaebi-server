@@ -26,9 +26,9 @@ public class UserDailyActivity {
     private LocalDate activityDate;
 
     @Column(nullable = false)
-    private int solvedCount;
+    private Integer solvedCount;
 
-    public void increaseSolvedCount(int delta) {
+    public void increaseSolvedCount(Integer delta) {
         this.solvedCount += delta;
     }
 }

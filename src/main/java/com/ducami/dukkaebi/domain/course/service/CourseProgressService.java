@@ -20,14 +20,14 @@ public class CourseProgressService {
 
     // 진행 퍼센트 계산: SOLVED 개수 / 전체 문제 수 * 100
     @Transactional(readOnly = true)
-    public int calculateProgressPercent(Course course) {
+    public Integer calculateProgressPercent(Course course) {
         List<Long> problemIds = course.getProblemIds();
         if (problemIds == null || problemIds.isEmpty()) return 0;
 
         Long userId = userSessionHolder.getUserId();
         List<ProblemHistory> histories = problemHistoryJpaRepo.findByUser_Id(userId);
 
-        int solvedCount = 0;
+        Integer solvedCount = 0;
         for (ProblemHistory h : histories) {
             Long pid = h.getProblem().getProblemId();
             if (problemIds.contains(pid) && h.getSolvedResult() == SolvedResult.SOLVED) {
@@ -48,7 +48,7 @@ public class CourseProgressService {
         }
 
         // 수강 중 - 진행도로 판단
-        int progress = calculateProgressPercent(course);
+        Integer progress = calculateProgressPercent(course);
         return progress >= 100 ? CourseStatus.COMPLETED : CourseStatus.IN_PROGRESS;
     }
 }

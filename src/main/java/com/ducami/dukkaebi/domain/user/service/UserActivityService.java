@@ -22,7 +22,7 @@ public class UserActivityService {
     private static final ZoneId ZONE = ZoneId.of("Asia/Seoul");
 
     @Transactional
-    public void increaseTodaySolvedCount(int delta) {
+    public void increaseTodaySolvedCount(Integer delta) {
         Long userId = userSessionHolder.getUserId();
         LocalDate today = LocalDate.now(ZONE);
 
@@ -55,7 +55,7 @@ public class UserActivityService {
     }
 
     @Transactional(readOnly = true)
-    public int getCurrentStreak() {
+    public Integer getCurrentStreak() {
         Long userId = userSessionHolder.getUserId();
         LocalDate today = LocalDate.now(ZONE);
         LocalDate start = today.minusDays(365); // 1년치만 조회(성능)
@@ -65,7 +65,7 @@ public class UserActivityService {
         Set<LocalDate> activeDays = new HashSet<>();
         list.forEach(a -> { if (a.getSolvedCount() > 0) activeDays.add(a.getActivityDate()); });
 
-        int streak = 0;
+        Integer streak = 0;
         LocalDate cursor = today;
         while (activeDays.contains(cursor)) {
             streak++;

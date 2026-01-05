@@ -9,15 +9,15 @@ public enum GrowthType {
     JADE(3000, 4999),   // 옥깨비 3000~4999
     GOD(5000, Integer.MAX_VALUE); // 신깨비 5000~
 
-    private final int minScore;
-    private final int maxScore;
+    private final Integer minScore;
+    private final Integer maxScore;
 
-    GrowthType(int minScore, int maxScore) {
+    GrowthType(Integer minScore, Integer maxScore) {
         this.minScore = minScore;
         this.maxScore = maxScore;
     }
 
-    public static GrowthType fromScore(int score) {
+    public static GrowthType fromScore(Integer score) {
         for (GrowthType type : values()) {
             if (score >= type.minScore && score <= type.maxScore) {
                 return type;
@@ -26,11 +26,11 @@ public enum GrowthType {
         return WISP; // 기본값
     }
 
-    public int getMinScore() {
+    public Integer getMinScore() {
         return minScore;
     }
 
-    public int getMaxScore() {
+    public Integer getMaxScore() {
         return maxScore;
     }
 }

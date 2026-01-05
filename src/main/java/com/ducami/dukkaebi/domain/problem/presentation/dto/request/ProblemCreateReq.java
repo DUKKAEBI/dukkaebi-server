@@ -12,6 +12,7 @@ public record ProblemCreateReq(
         String input,
         String output,
         DifficultyType difficulty,
+        Integer score,
         List<TestCaseReq> testCases
 ) {
     public record TestCaseReq(
@@ -33,14 +34,15 @@ public record ProblemCreateReq(
                 .build();
     }
 
-    // 대회 전용 문제 생성
+    // 대회 전용 문제 생성 (점수 기반)
     public Problem toContestEntity(String contestId) {
         return Problem.builder()
                 .name(name)
                 .description(description)
                 .input(input)
                 .output(output)
-                .difficulty(difficulty)
+                .difficulty(null)
+                .score(score)
                 .solvedCount(0)
                 .attemptCount(0)
                 .addedAt(LocalDate.now())
