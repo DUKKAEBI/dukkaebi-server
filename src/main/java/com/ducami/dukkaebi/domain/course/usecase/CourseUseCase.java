@@ -44,6 +44,13 @@ public class CourseUseCase {
     }
 
     @Transactional(readOnly = true)
+    public List<CourseListRes> getCourseWithName(String name) {
+        return courseJpaRepo.findByTitleContainingIgnoreCase(name).stream()
+                .map(CourseListRes::from)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public CourseDetailRes getCourseDetail(Long courseId) {
         Course course = courseJpaRepo.findById(courseId)
                 .orElseThrow(() -> new CustomException(CourseErrorCode.COURSE_NOT_FOUND));

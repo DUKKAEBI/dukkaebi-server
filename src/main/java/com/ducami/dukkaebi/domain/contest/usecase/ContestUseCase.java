@@ -73,6 +73,16 @@ public class ContestUseCase {
         return ContestDetailRes.from(contest, problemResList, userId);
     }
 
+    @Transactional(readOnly = true)
+    public List<ContestListRes> getContestWithName(String name) {
+        Long userId = userSessionHolder.getUserId();
+
+        return contestJpaRepo.findByTitleContainingIgnoreCaseOrderByEndDateAsc(name)
+                .stream()
+                .map(contest -> ContestListRes.from(contest, userId))
+                .toList();
+    }
+
     // 관리자
     @Transactional
     public Response createContest(ContestReq req) {
