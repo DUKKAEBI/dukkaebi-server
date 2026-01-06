@@ -1,0 +1,33 @@
+package com.ducami.dukkaebi.domain.contest.presentation.controller;
+
+import com.ducami.dukkaebi.domain.contest.service.ContestSseService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+@Slf4j
+@Tag(name = "대회 SSE API")
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/contest")
+public class ContestSseController {
+    private final ContestSseService contestSseService;
+
+    @GetMapping(value = "/{code}/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @Operation(
+            summary = "대회 실시간 업데이트 구독",
+            description = "대회 정보가 변경될 때 실시간으로 알림을 받습니다. (SSE)"
+    )
+    public SseEmitter subscribe(@PathVariable("code") String code) {
+        log.info("대회 SSE 구독 요청 - contestCode: {}", code);
+        return contestSseService.subscribe(code);
+    }
+}
+

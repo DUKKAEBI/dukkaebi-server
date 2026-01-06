@@ -12,6 +12,8 @@ import com.ducami.dukkaebi.domain.contest.presentation.dto.request.ContestScoreU
 import com.ducami.dukkaebi.domain.contest.presentation.dto.response.ContestDetailRes;
 import com.ducami.dukkaebi.domain.contest.presentation.dto.response.ContestListRes;
 import com.ducami.dukkaebi.domain.contest.presentation.dto.response.ContestParticipantListRes;
+import com.ducami.dukkaebi.domain.contest.presentation.dto.response.ContestUpdateEvent;
+import com.ducami.dukkaebi.domain.contest.service.ContestSseService;
 import com.ducami.dukkaebi.domain.contest.util.CodeGenerator;
 import com.ducami.dukkaebi.domain.problem.error.ProblemErrorCode;
 import com.ducami.dukkaebi.domain.user.domain.User;
@@ -46,6 +48,7 @@ public class ContestUseCase {
     private final ProblemJpaRepo problemJpaRepo;
     private final ProblemHistoryJpaRepo problemHistoryJpaRepo;
     private final ProblemTestCaseJpaRepo problemTestCaseJpaRepo;
+    private final ContestSseService contestSseService;
 
     private static final ZoneId ZONE = ZoneId.of("Asia/Seoul");
 
@@ -118,6 +121,18 @@ public class ContestUseCase {
         }
 
         contest.updateContest(req.title(), req.description(), req.startDate(), req.endDate());
+        contestJpaRepo.save(contest);
+
+        // SSE 이벤트 발행: 대회를 구독 중인 모든 사용자에게 변경사항 전송
+        ContestUpdateEvent event = ContestUpdateEvent.of(
+                code,
+                req.title(),
+                req.description(),
+                req.startDate(),
+                req.endDate()
+        );
+        contestSseService.sendUpdateEvent(code, event);
+
         return Response.ok("대회가 성공적으로 수정되었습니다.");
     }
 
