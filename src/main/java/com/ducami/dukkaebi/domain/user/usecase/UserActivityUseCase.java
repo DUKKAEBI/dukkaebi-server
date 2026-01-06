@@ -27,5 +27,20 @@ public class UserActivityUseCase {
         Integer streak = userActivityService.getCurrentStreak();
         return new StreakRes(streak);
     }
+
+    // 특정 사용자의 잔디 데이터 조회
+    public Map<String, Integer> getContributionsByUserId(Long userId, LocalDate start, LocalDate end) {
+        var data = userActivityService.getContributionsByUserId(userId, start, end);
+        Map<String, Integer> resp = new LinkedHashMap<>();
+        data.forEach((k, v) -> resp.put(k.toString(), v));
+        return resp;
+    }
+
+    // 특정 사용자의 연속 학습일 조회
+    public StreakRes getStreakByUserId(Long userId) {
+        Integer streak = userActivityService.getCurrentStreakByUserId(userId);
+        return new StreakRes(streak);
+    }
 }
+
 

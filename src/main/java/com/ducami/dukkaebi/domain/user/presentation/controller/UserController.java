@@ -2,6 +2,7 @@ package com.ducami.dukkaebi.domain.user.presentation.controller;
 
 import com.ducami.dukkaebi.domain.user.domain.enums.SortType;
 import com.ducami.dukkaebi.domain.user.presentation.dto.response.UserInfoRes;
+import com.ducami.dukkaebi.domain.user.presentation.dto.response.UserInfoWithActivityRes;
 import com.ducami.dukkaebi.domain.user.presentation.dto.response.UserListRes;
 import com.ducami.dukkaebi.domain.user.usecase.UserUseCase;
 import com.ducami.dukkaebi.global.common.Response;
@@ -9,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Tag(name = "사용자 API")
@@ -42,6 +45,16 @@ public class UserController {
     @Operation(summary = "특정 사용자 정보 조회")
     public UserInfoRes getUserInfoById(@PathVariable("userId") Long userId) {
         return userUseCase.getUserInfoById(userId);
+    }
+
+    @GetMapping("/info/{userId}/activity")
+    @Operation(summary = "특정 사용자 정보 조회 (활동 데이터 포함)")
+    public UserInfoWithActivityRes getUserInfoWithActivity(
+            @PathVariable("userId") Long userId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end
+    ) {
+        return userUseCase.getUserInfoWithActivity(userId, start, end);
     }
 
     @GetMapping("/list/filter")

@@ -6,6 +6,7 @@ import com.ducami.dukkaebi.domain.user.domain.enums.UserType;
 import com.ducami.dukkaebi.domain.user.domain.repo.UserJpaRepo;
 import com.ducami.dukkaebi.domain.user.error.UserErrorCode;
 import com.ducami.dukkaebi.domain.user.presentation.dto.response.UserInfoRes;
+import com.ducami.dukkaebi.domain.user.presentation.dto.response.UserInfoWithActivityRes;
 import com.ducami.dukkaebi.domain.user.presentation.dto.response.UserListRes;
 import com.ducami.dukkaebi.domain.user.service.UserDeleteService;
 import com.ducami.dukkaebi.domain.user.service.UserFilterService;
@@ -19,7 +20,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +33,7 @@ public class UserUseCase {
     private final UserJpaRepo userJpaRepo;
     private final UserDeleteService userDeleteService;
     private final UserFilterService userFilterService;
+    private final UserActivityUseCase userActivityUseCase;
 
     public UserInfoRes getUserInfo() {
         User user = userSessionHolder.getUser();
@@ -47,6 +51,18 @@ public class UserUseCase {
         User user = userJpaRepo.findById(userId)
                 .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
         return UserInfoRes.from(user);
+    }
+
+    // 특정 사용자 정보 조회 (활동 데이터 포함)
+    public UserInfoWithActivityRes getUserInfoWithActivity(Long userId, LocalDate start, LocalDate end) {
+        User user = userJpaRepo.findById(userId)
+                .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
+
+        Integer streak = userActivityUseCase.getStreakByUserId(userId).streak();
+
+        Map<String, Integer> contributions = userActivityUseCase.getContributionsByUserId(userId, start, end);
+
+        return UserInfoWithActivityRes.of(user, streak, contributions);
     }
 
     public List<UserListRes> getFilteredUsers(String keyword, SortType sortType) {

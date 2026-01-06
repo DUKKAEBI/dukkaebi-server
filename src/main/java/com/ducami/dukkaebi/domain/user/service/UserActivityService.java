@@ -73,4 +73,40 @@ public class UserActivityService {
         }
         return streak;
     }
+
+    // 특정 사용자의 잔디 데이터 조회
+    @Transactional(readOnly = true)
+    public Map<LocalDate, Integer> getContributionsByUserId(Long userId, LocalDate start, LocalDate end) {
+        if (end.isBefore(start)) {
+            LocalDate tmp = start; start = end; end = tmp;
+        }
+        // 기본 0으로 채운 날짜 맵
+        Map<LocalDate, Integer> map = new LinkedHashMap<>();
+        for (LocalDate d = start; !d.isAfter(end); d = d.plusDays(1)) {
+            map.put(d, 0);
+        }
+        activityRepo.findAllByUser_IdAndActivityDateBetweenOrderByActivityDate(userId, start, end)
+                .forEach(a -> map.put(a.getActivityDate(), a.getSolvedCount()));
+        return map;
+    }
+
+    // 특정 사용자의 연속 학습일 조회
+    @Transactional(readOnly = true)
+    public Integer getCurrentStreakByUserId(Long userId) {
+        LocalDate today = LocalDate.now(ZONE);
+        LocalDate start = today.minusDays(365); // 1년치만 조회(성능)
+        var list = activityRepo.findAllByUser_IdAndActivityDateBetweenOrderByActivityDate(userId, start, today);
+
+        // 활동 일자를 Set으로 변환
+        Set<LocalDate> activeDays = new HashSet<>();
+        list.forEach(a -> { if (a.getSolvedCount() > 0) activeDays.add(a.getActivityDate()); });
+
+        Integer streak = 0;
+        LocalDate cursor = today;
+        while (activeDays.contains(cursor)) {
+            streak++;
+            cursor = cursor.minusDays(1);
+        }
+        return streak;
+    }
 }
