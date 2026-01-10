@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 @Slf4j
 @Tag(name = "대회 SSE API")
 @RestController
@@ -21,12 +23,15 @@ public class ContestSseController {
     private final ContestSseService contestSseService;
 
     @GetMapping(value = "/{code}/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    @Operation(
-            summary = "대회 실시간 업데이트 구독",
-            description = "대회 정보가 변경될 때 실시간으로 알림을 받습니다. (SSE)"
-    )
-    public SseEmitter subscribe(@PathVariable("code") String code) {
+    @Operation(summary = "대회 실시간 업데이트 구독")
+    public SseEmitter subscribe(@PathVariable("code") String code, HttpServletResponse response) {
         log.info("대회 SSE 구독 요청 - contestCode: {}", code);
+
+        // SSE를 위한 HTTP 응답 헤더 설정
+        response.setHeader("Cache-Control", "no-cache");
+        response.setHeader("X-Accel-Buffering", "no"); // Nginx 버퍼링 방지
+        response.setHeader("Connection", "keep-alive");
+
         return contestSseService.subscribe(code);
     }
 }

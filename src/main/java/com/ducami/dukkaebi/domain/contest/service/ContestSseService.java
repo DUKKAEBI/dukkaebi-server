@@ -41,9 +41,11 @@ public class ContestSseService {
         try {
             emitter.send(SseEmitter.event()
                     .name("connected")
-                    .data("SSE 연결이 완료되었습니다."));
+                    .data("SSE 연결이 완료되었습니다. 대회 정보 변경 시 실시간으로 알림을 받습니다."));
+            log.info("SSE 초기 연결 메시지 전송 성공 - contestCode: {}", contestCode);
         } catch (IOException e) {
             log.error("SSE 연결 초기화 실패: {}", e.getMessage());
+            removeEmitter(contestCode, emitter);
         }
 
         // 타임아웃 처리
@@ -54,7 +56,7 @@ public class ContestSseService {
 
         // 완료 처리
         emitter.onCompletion(() -> {
-            log.info("SSE 연결 완료 - contestCode: {}", contestCode);
+            log.info("SSE 연결 종료 - contestCode: {}", contestCode);
             removeEmitter(contestCode, emitter);
         });
 

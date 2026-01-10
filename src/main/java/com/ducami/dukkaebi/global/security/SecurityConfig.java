@@ -64,7 +64,6 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cors = new CorsConfiguration();
 
-        // 개발/배포 환경 도메인/포트 허용 (정확 매칭이 어려우면 패턴 사용)
         cors.setAllowedOriginPatterns(List.of(
                 "http://localhost:*",
                 "http://127.0.0.1:*",
@@ -74,7 +73,7 @@ public class SecurityConfig {
         ));
         cors.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
         cors.addAllowedHeader("*");
-        cors.setExposedHeaders(List.of("Authorization","Content-Type"));
+        cors.setExposedHeaders(List.of("Authorization","Content-Type","Cache-Control","X-Accel-Buffering")); // SSE 헤더 추가
         cors.setAllowCredentials(true);
         cors.setMaxAge(3600L);
 
