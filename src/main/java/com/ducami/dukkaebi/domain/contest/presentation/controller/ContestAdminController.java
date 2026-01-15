@@ -11,6 +11,7 @@ import com.ducami.dukkaebi.global.common.service.S3Service;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -32,7 +33,7 @@ public class ContestAdminController {
     private final ContestUseCase contestUseCase;
     private final S3Service s3Service;
 
-    @PostMapping("/upload-image")
+    @PostMapping(value = "/upload-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "대회 표지 이미지 업로드")
     public ResponseData<String> uploadCoverImage(@RequestPart("file") MultipartFile file) {
         String imageUrl = s3Service.uploadFile(file, "contest");
