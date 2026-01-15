@@ -3,7 +3,7 @@ package com.ducami.dukkaebi.domain.course.presentation.controller;
 import com.ducami.dukkaebi.domain.course.presentation.dto.response.CourseDetailRes;
 import com.ducami.dukkaebi.domain.course.presentation.dto.response.CourseListRes;
 import com.ducami.dukkaebi.domain.course.usecase.CourseUseCase;
-import com.ducami.dukkaebi.global.common.PageResponse;
+import com.ducami.dukkaebi.global.common.dto.response.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

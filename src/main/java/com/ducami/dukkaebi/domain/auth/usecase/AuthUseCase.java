@@ -8,7 +8,7 @@ import com.ducami.dukkaebi.domain.auth.presentation.dto.response.RefreshRes;
 import com.ducami.dukkaebi.domain.auth.presentation.dto.response.SignInRes;
 import com.ducami.dukkaebi.domain.user.domain.User;
 import com.ducami.dukkaebi.domain.user.domain.repo.UserJpaRepo;
-import com.ducami.dukkaebi.global.common.Response;
+import com.ducami.dukkaebi.global.common.dto.response.Response;
 import com.ducami.dukkaebi.global.exception.CustomException;
 import com.ducami.dukkaebi.global.security.jwt.enums.TokenType;
 import com.ducami.dukkaebi.global.security.jwt.error.JwtErrorCode;

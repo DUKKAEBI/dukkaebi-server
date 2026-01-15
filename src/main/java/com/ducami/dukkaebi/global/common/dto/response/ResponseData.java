@@ -1,4 +1,4 @@
-package com.ducami.dukkaebi.global.common;
+package com.ducami.dukkaebi.global.common.dto.response;
 
 import com.ducami.dukkaebi.global.exception.error.ErrorCode;
 import lombok.Getter;

@@ -16,8 +16,8 @@ import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemHistoryJpaRepo;
 import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemJpaRepo;
 import com.ducami.dukkaebi.domain.problem.error.ProblemErrorCode;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemRes;
-import com.ducami.dukkaebi.global.common.PageResponse;
-import com.ducami.dukkaebi.global.common.Response;
+import com.ducami.dukkaebi.global.common.dto.response.PageResponse;
+import com.ducami.dukkaebi.global.common.dto.response.Response;
 import com.ducami.dukkaebi.global.exception.CustomException;
 import com.ducami.dukkaebi.domain.course.domain.enums.CourseStatus;
 import com.ducami.dukkaebi.global.security.auth.UserSessionHolder;
@@ -26,7 +26,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;

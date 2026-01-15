@@ -4,7 +4,7 @@ import com.ducami.dukkaebi.domain.problem.domain.enums.DifficultyType;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemDetailRes;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemRes;
 import com.ducami.dukkaebi.domain.problem.usecase.ProblemUseCase;
-import com.ducami.dukkaebi.global.common.PageResponse;
+import com.ducami.dukkaebi.global.common.dto.response.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

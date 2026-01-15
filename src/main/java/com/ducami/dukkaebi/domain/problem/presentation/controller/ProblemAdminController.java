@@ -3,7 +3,7 @@ package com.ducami.dukkaebi.domain.problem.presentation.controller;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.request.ProblemCreateReq;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.request.ProblemUpdateReq;
 import com.ducami.dukkaebi.domain.problem.usecase.ProblemUseCase;
-import com.ducami.dukkaebi.global.common.Response;
+import com.ducami.dukkaebi.global.common.dto.response.Response;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

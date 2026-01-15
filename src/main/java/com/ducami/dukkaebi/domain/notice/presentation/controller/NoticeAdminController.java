@@ -2,9 +2,9 @@ package com.ducami.dukkaebi.domain.notice.presentation.controller;
 
 import com.ducami.dukkaebi.domain.notice.presentation.dto.request.NoticeReq;
 import com.ducami.dukkaebi.domain.notice.usecase.NoticeUseCase;
-import com.ducami.dukkaebi.global.common.Response;
-import com.ducami.dukkaebi.global.common.ResponseData;
-import com.ducami.dukkaebi.global.common.S3Service;
+import com.ducami.dukkaebi.global.common.dto.response.Response;
+import com.ducami.dukkaebi.global.common.dto.response.ResponseData;
+import com.ducami.dukkaebi.global.common.service.S3Service;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

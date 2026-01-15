@@ -5,9 +5,9 @@ import com.ducami.dukkaebi.domain.contest.presentation.dto.request.ContestScoreU
 import com.ducami.dukkaebi.domain.contest.presentation.dto.response.ContestParticipantListRes;
 import com.ducami.dukkaebi.domain.contest.usecase.ContestUseCase;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.request.ProblemCreateReq;
-import com.ducami.dukkaebi.global.common.Response;
-import com.ducami.dukkaebi.global.common.ResponseData;
-import com.ducami.dukkaebi.global.common.S3Service;
+import com.ducami.dukkaebi.global.common.dto.response.Response;
+import com.ducami.dukkaebi.global.common.dto.response.ResponseData;
+import com.ducami.dukkaebi.global.common.service.S3Service;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

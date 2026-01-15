@@ -9,8 +9,8 @@ import com.ducami.dukkaebi.domain.user.presentation.dto.response.UserInfoWithAct
 import com.ducami.dukkaebi.domain.user.presentation.dto.response.UserListRes;
 import com.ducami.dukkaebi.domain.user.service.UserDeleteService;
 import com.ducami.dukkaebi.domain.user.service.UserFilterService;
-import com.ducami.dukkaebi.global.common.PageResponse;
-import com.ducami.dukkaebi.global.common.Response;
+import com.ducami.dukkaebi.global.common.dto.response.PageResponse;
+import com.ducami.dukkaebi.global.common.dto.response.Response;
 import com.ducami.dukkaebi.global.exception.CustomException;
 import com.ducami.dukkaebi.global.security.auth.UserSessionHolder;
 import com.ducami.dukkaebi.global.security.jwt.service.JwtTokenService;
