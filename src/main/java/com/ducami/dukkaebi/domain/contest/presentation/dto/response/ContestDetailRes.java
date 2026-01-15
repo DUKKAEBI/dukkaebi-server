@@ -13,6 +13,7 @@ public record ContestDetailRes(
         String code,
         String title,
         String description,
+        String imageUrl,
         LocalDateTime startDate,
         LocalDateTime endDate,
         ContestStatus status,
@@ -44,6 +45,7 @@ public record ContestDetailRes(
                 .code(contest.getCode())
                 .title(contest.getTitle())
                 .description(contest.getDescription())
+                .imageUrl(contest.getImageUrl())
                 .startDate(contest.getStartDate())
                 .endDate(contest.getEndDate())
                 .status(status)

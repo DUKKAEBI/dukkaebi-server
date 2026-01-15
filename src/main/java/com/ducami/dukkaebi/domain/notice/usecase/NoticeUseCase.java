@@ -7,8 +7,8 @@ import com.ducami.dukkaebi.domain.notice.presentation.dto.request.NoticeReq;
 import com.ducami.dukkaebi.domain.notice.presentation.dto.response.NoticeDetailRes;
 import com.ducami.dukkaebi.domain.notice.presentation.dto.response.NoticeListRes;
 import com.ducami.dukkaebi.domain.user.domain.User;
-import com.ducami.dukkaebi.global.common.PageResponse;
-import com.ducami.dukkaebi.global.common.Response;
+import com.ducami.dukkaebi.global.common.dto.response.PageResponse;
+import com.ducami.dukkaebi.global.common.dto.response.Response;
 import com.ducami.dukkaebi.global.exception.CustomException;
 import com.ducami.dukkaebi.global.security.auth.UserSessionHolder;
 import lombok.RequiredArgsConstructor;
@@ -69,7 +69,7 @@ public class NoticeUseCase {
                 .orElseThrow(() -> new CustomException(NoticeErrorCode.NOTICE_NOT_FOUND));
 
         // 기본 정보 수정
-        notice.updateNotice(req.title(), req.content());
+        notice.updateNotice(req.title(), req.content(), req.fileUrl());
 
         return Response.ok("공지사항이 성공적으로 수정되었습니다.");
     }

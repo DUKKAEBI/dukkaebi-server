@@ -3,7 +3,7 @@ package com.ducami.dukkaebi.domain.contest.presentation.controller;
 import com.ducami.dukkaebi.domain.contest.presentation.dto.response.ContestDetailRes;
 import com.ducami.dukkaebi.domain.contest.presentation.dto.response.ContestListRes;
 import com.ducami.dukkaebi.domain.contest.usecase.ContestUseCase;
-import com.ducami.dukkaebi.global.common.PageResponse;
+import com.ducami.dukkaebi.global.common.dto.response.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

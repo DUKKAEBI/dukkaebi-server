@@ -17,8 +17,8 @@ import com.ducami.dukkaebi.domain.contest.service.ContestSseService;
 import com.ducami.dukkaebi.domain.contest.util.CodeGenerator;
 import com.ducami.dukkaebi.domain.problem.error.ProblemErrorCode;
 import com.ducami.dukkaebi.domain.user.domain.User;
-import com.ducami.dukkaebi.global.common.PageResponse;
-import com.ducami.dukkaebi.global.common.Response;
+import com.ducami.dukkaebi.global.common.dto.response.PageResponse;
+import com.ducami.dukkaebi.global.common.dto.response.Response;
 import com.ducami.dukkaebi.global.exception.CustomException;
 import com.ducami.dukkaebi.global.security.auth.UserSessionHolder;
 import com.ducami.dukkaebi.domain.problem.domain.Problem;
@@ -29,7 +29,6 @@ import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemJpaRepo;
 import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemTestCaseJpaRepo;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.request.ProblemCreateReq;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemRes;
-import com.ducami.dukkaebi.global.common.PageResponse;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -125,7 +124,7 @@ public class ContestUseCase {
             throw new CustomException(ContestErrorCode.TITLE_ALREADY);
         }
 
-        contest.updateContest(req.title(), req.description(), req.startDate(), req.endDate());
+        contest.updateContest(req.title(), req.description(), req.imageUrl(), req.startDate(), req.endDate());
         contestJpaRepo.save(contest);
 
         // SSE 이벤트 발행: 대회를 구독 중인 모든 사용자에게 변경사항 전송

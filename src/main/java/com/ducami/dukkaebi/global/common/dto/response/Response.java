@@ -1,4 +1,4 @@
-package com.ducami.dukkaebi.global.common;
+package com.ducami.dukkaebi.global.common.dto.response;
 
 import lombok.Builder;
 import lombok.Getter;

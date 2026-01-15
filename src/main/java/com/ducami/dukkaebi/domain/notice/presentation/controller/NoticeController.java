@@ -3,7 +3,7 @@ package com.ducami.dukkaebi.domain.notice.presentation.controller;
 import com.ducami.dukkaebi.domain.notice.presentation.dto.response.NoticeDetailRes;
 import com.ducami.dukkaebi.domain.notice.presentation.dto.response.NoticeListRes;
 import com.ducami.dukkaebi.domain.notice.usecase.NoticeUseCase;
-import com.ducami.dukkaebi.global.common.PageResponse;
+import com.ducami.dukkaebi.global.common.dto.response.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

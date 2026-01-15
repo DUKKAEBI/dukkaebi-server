@@ -9,7 +9,7 @@ import com.ducami.dukkaebi.domain.user.domain.User;
 import com.ducami.dukkaebi.domain.user.domain.repo.UserDailyActivityJpaRepo;
 import com.ducami.dukkaebi.domain.user.domain.repo.UserJpaRepo;
 import com.ducami.dukkaebi.domain.user.error.UserErrorCode;
-import com.ducami.dukkaebi.global.common.Response;
+import com.ducami.dukkaebi.global.common.dto.response.Response;
 import com.ducami.dukkaebi.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

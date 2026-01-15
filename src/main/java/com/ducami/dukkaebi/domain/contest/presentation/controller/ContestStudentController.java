@@ -1,7 +1,7 @@
 package com.ducami.dukkaebi.domain.contest.presentation.controller;
 
 import com.ducami.dukkaebi.domain.contest.usecase.ContestUseCase;
-import com.ducami.dukkaebi.global.common.Response;
+import com.ducami.dukkaebi.global.common.dto.response.Response;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

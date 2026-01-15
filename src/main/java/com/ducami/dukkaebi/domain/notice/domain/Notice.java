@@ -25,6 +25,9 @@ public class Notice {
     @Column(nullable = false)
     private String content;
 
+    @Column
+    private String fileUrl;
+
     @Column(nullable = false)
     private String writer;
 
@@ -42,8 +45,9 @@ public class Notice {
         this.hits++;
     }
 
-    public void updateNotice(String title, String content) {
+    public void updateNotice(String title, String content, String fileUrl) {
         this.title = title;
         this.content = content;
+        this.fileUrl = fileUrl;
     }
 }

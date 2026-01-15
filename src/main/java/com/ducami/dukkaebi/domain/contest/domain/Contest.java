@@ -35,6 +35,9 @@ public class Contest {
     private String description;
 
     @Column
+    private String imageUrl;
+
+    @Column
     private LocalDateTime startDate;
 
     @Column
@@ -54,9 +57,10 @@ public class Contest {
     @Column(name = "problem_id")
     private List<Long> problemIds;
 
-    public void updateContest(String title, String description, LocalDateTime startDate, LocalDateTime endDate) {
+    public void updateContest(String title, String description, String imageUrl, LocalDateTime startDate, LocalDateTime endDate) {
         this.title = title;
         this.description = description;
+        this.imageUrl = imageUrl;
         this.startDate = startDate;
         this.endDate = endDate;
     }

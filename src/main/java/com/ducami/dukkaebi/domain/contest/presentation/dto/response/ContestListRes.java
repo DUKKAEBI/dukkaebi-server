@@ -10,6 +10,7 @@ import java.time.temporal.ChronoUnit;
 public record ContestListRes(
         String code,
         String title,
+        String imageUrl,
         String dDay,
         Integer participantCount,
         ContestStatus status
@@ -49,6 +50,6 @@ public record ContestListRes(
             }
         }
 
-        return new ContestListRes(contest.getCode(), contest.getTitle(), dDayStr, count, status);
+        return new ContestListRes(contest.getCode(), contest.getTitle(), contest.getImageUrl(), dDayStr, count, status);
     }
 }
