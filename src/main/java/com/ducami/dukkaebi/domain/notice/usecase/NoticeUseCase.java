@@ -69,7 +69,7 @@ public class NoticeUseCase {
                 .orElseThrow(() -> new CustomException(NoticeErrorCode.NOTICE_NOT_FOUND));
 
         // 기본 정보 수정
-        notice.updateNotice(req.title(), req.content());
+        notice.updateNotice(req.title(), req.content(), req.fileUrl());
 
         return Response.ok("공지사항이 성공적으로 수정되었습니다.");
     }

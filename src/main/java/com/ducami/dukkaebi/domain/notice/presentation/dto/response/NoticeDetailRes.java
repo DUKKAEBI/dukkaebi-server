@@ -8,6 +8,7 @@ public record NoticeDetailRes(
         String title,
         String writer,
         String content,
+        String fileUrl,
         LocalDate createdAt
 ){
     public static NoticeDetailRes from(Notice notice) {
@@ -15,6 +16,7 @@ public record NoticeDetailRes(
                 notice.getTitle(),
                 notice.getWriter(),
                 notice.getContent(),
+                notice.getFileUrl(),
                 notice.getCreatedAt().toLocalDate()
         );
     }

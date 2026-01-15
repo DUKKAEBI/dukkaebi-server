@@ -10,6 +10,7 @@ import java.util.List;
 public record ContestReq(
         String title,
         String description,
+        String imageUrl,
         LocalDateTime startDate,
         LocalDateTime endDate
 ) {
@@ -18,6 +19,7 @@ public record ContestReq(
                 .code(code)
                 .title(req.title)
                 .description(req.description)
+                .imageUrl(req.imageUrl)
                 .startDate(req.startDate)
                 .endDate(req.endDate)
                 .status(ContestStatus.JOINABLE)
