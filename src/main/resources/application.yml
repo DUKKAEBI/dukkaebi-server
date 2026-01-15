@@ -24,6 +24,16 @@ jwt:
   refreshExp: 604800000 # 1week
   accessExp: 6000000 # 2hour
 
+cloud:
+  aws:
+    s3:
+      bucket: ${BUCKET_NAME}
+    stack.auto: false
+    region.static: ap-northeast-2
+    credentials:
+      accessKey: ${AWS_ACCESS_KEY}
+      secretKey: ${AWS_SECRET_KEY}
+
 gemini:
   api-key: ${GEMINI_API_KEY}
   grading-api-key: ${GEMINI_GRADING_API_KEY}
