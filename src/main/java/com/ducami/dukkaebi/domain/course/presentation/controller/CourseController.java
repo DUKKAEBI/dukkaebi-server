@@ -1,9 +1,9 @@
 package com.ducami.dukkaebi.domain.course.presentation.controller;
 
-import com.ducami.dukkaebi.domain.contest.presentation.dto.response.ContestListRes;
 import com.ducami.dukkaebi.domain.course.presentation.dto.response.CourseDetailRes;
 import com.ducami.dukkaebi.domain.course.presentation.dto.response.CourseListRes;
 import com.ducami.dukkaebi.domain.course.usecase.CourseUseCase;
+import com.ducami.dukkaebi.global.common.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -12,8 +12,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @Tag(name = "코스 API")
 @RestController
@@ -24,8 +22,11 @@ public class CourseController {
 
     @GetMapping("/list")
     @Operation(summary = "코스 리스트 조회")
-    public List<CourseListRes> getCourseList() {
-        return courseUseCase.getCourseList();
+    public PageResponse<CourseListRes> getCourseList(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size
+    ) {
+        return courseUseCase.getCourseListPaged(page, size);
     }
 
     @GetMapping("/{courseId}")
@@ -36,7 +37,11 @@ public class CourseController {
 
     @GetMapping("/search")
     @Operation(summary = "이름으로 검색")
-    public List<CourseListRes> getCourseWithName(@RequestParam String name) {
-        return courseUseCase.getCourseWithName(name);
+    public PageResponse<CourseListRes> getCourseWithName(
+            @RequestParam String name,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size
+    ) {
+        return courseUseCase.getCourseWithNamePaged(name, page, size);
     }
 }

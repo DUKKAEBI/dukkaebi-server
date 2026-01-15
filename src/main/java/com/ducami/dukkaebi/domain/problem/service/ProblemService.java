@@ -12,6 +12,8 @@ import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemRes;
 import com.ducami.dukkaebi.global.security.auth.UserSessionHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,6 +66,44 @@ public class ProblemService {
 
         } catch (Exception e) {
             log.error("모든 문제 조회 실패: {}", e.getMessage(), e);
+            throw new RuntimeException("문제 목록 조회에 실패했습니다.", e);
+        }
+    }
+
+    /**
+     * 모든 문제 조회 (페이징)
+     */
+    public Page<ProblemRes> getAllProblemsPaged(Pageable pageable) {
+        try {
+            log.info("모든 문제 페이징 조회 시작");
+
+            Long userId = userSessionHolder.getUserId();
+            log.info("조회 userId: {}", userId);
+
+            // 유저의 모든 히스토리 조회
+            List<ProblemHistory> historyList = problemHistoryJpaRepo.findByUser_Id(userId);
+            log.info("히스토리 조회 완료 - {}개", historyList.size());
+
+            // 문제 ID → 히스토리 매핑
+            Map<Long, ProblemHistory> historyMap = new HashMap<>();
+            for (ProblemHistory history : historyList) {
+                if (history.getProblem() != null) {
+                    historyMap.put(history.getProblem().getProblemId(), history);
+                }
+            }
+
+            // 모든 문제 조회 (대회 전용 문제 제외, 페이징)
+            Page<Problem> problemPage = problemJpaRepo.findByContestIdIsNull(pageable);
+            log.info("문제 조회 완료 - 총 {}개", problemPage.getTotalElements());
+
+            // DTO 변환
+            return problemPage.map(problem -> {
+                ProblemHistory history = historyMap.get(problem.getProblemId());
+                return ProblemRes.from(problem, history);
+            });
+
+        } catch (Exception e) {
+            log.error("모든 문제 페이징 조회 실패: {}", e.getMessage(), e);
             throw new RuntimeException("문제 목록 조회에 실패했습니다.", e);
         }
     }

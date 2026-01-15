@@ -11,14 +11,17 @@ import com.ducami.dukkaebi.domain.problem.presentation.dto.request.ProblemUpdate
 import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemDetailRes;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemRes;
 import com.ducami.dukkaebi.domain.problem.service.ProblemService;
+import com.ducami.dukkaebi.global.common.PageResponse;
 import com.ducami.dukkaebi.global.common.Response;
 import com.ducami.dukkaebi.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @Slf4j
@@ -29,17 +32,18 @@ public class ProblemUseCase {
     private final ProblemJpaRepo problemJpaRepo;
     private final ProblemTestCaseJpaRepo testCaseJpaRepo;
 
-    public List<ProblemRes> getProblem() {
+    public PageResponse<ProblemRes> getProblemPaged(int page, int size) {
         try {
-            log.info("문제 목록 조회 요청");
+            log.info("문제 목록 페이징 조회 요청");
 
-            List<ProblemRes> problems = problemService.getAllProblems();
+            Pageable pageable = PageRequest.of(page, size);
+            Page<ProblemRes> problems = problemService.getAllProblemsPaged(pageable);
 
-            log.info("문제 목록 조회 성공 - {}개", problems.size());
-            return problems;
+            log.info("문제 목록 페이징 조회 성공 - {}개", problems.getTotalElements());
+            return PageResponse.of(problems);
 
         } catch (Exception e) {
-            log.error("문제 목록 조회 실패: {}", e.getMessage(), e);
+            log.error("문제 목록 페이징 조회 실패: {}", e.getMessage(), e);
             throw new CustomException(ProblemErrorCode.PROBLEM_FETCH_FAILED);
         }
     }

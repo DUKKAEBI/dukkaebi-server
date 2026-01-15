@@ -16,12 +16,17 @@ import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemHistoryJpaRepo;
 import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemJpaRepo;
 import com.ducami.dukkaebi.domain.problem.error.ProblemErrorCode;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemRes;
+import com.ducami.dukkaebi.global.common.PageResponse;
 import com.ducami.dukkaebi.global.common.Response;
 import com.ducami.dukkaebi.global.exception.CustomException;
 import com.ducami.dukkaebi.domain.course.domain.enums.CourseStatus;
 import com.ducami.dukkaebi.global.security.auth.UserSessionHolder;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
@@ -37,17 +42,19 @@ public class CourseUseCase {
     private final UserSessionHolder userSessionHolder;
 
     @Transactional(readOnly = true)
-    public List<CourseListRes> getCourseList() {
-        return courseJpaRepo.findAll().stream()
-                .map(CourseListRes::from)
-                .toList();
+    public PageResponse<CourseListRes> getCourseListPaged(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<CourseListRes> coursePage = courseJpaRepo.findAll(pageable)
+                .map(CourseListRes::from);
+        return PageResponse.of(coursePage);
     }
 
     @Transactional(readOnly = true)
-    public List<CourseListRes> getCourseWithName(String name) {
-        return courseJpaRepo.findByTitleContainingIgnoreCase(name).stream()
-                .map(CourseListRes::from)
-                .toList();
+    public PageResponse<CourseListRes> getCourseWithNamePaged(String name, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<CourseListRes> coursePage = courseJpaRepo.findByTitleContainingIgnoreCase(name, pageable)
+                .map(CourseListRes::from);
+        return PageResponse.of(coursePage);
     }
 
     @Transactional(readOnly = true)
