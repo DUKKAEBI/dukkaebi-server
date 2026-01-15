@@ -4,6 +4,7 @@ import com.ducami.dukkaebi.domain.problem.domain.enums.DifficultyType;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemDetailRes;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemRes;
 import com.ducami.dukkaebi.domain.problem.usecase.ProblemUseCase;
+import com.ducami.dukkaebi.global.common.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -20,8 +21,11 @@ public class ProblemController {
 
     @GetMapping
     @Operation(summary = "모든 문제 조회")
-    public List<ProblemRes> getProblems() {
-        return problemUseCase.getProblem();
+    public PageResponse<ProblemRes> getProblems(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "15") int size
+    ) {
+        return problemUseCase.getProblemPaged(page, size);
     }
 
     @GetMapping("/filter")

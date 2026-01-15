@@ -5,6 +5,7 @@ import com.ducami.dukkaebi.domain.user.presentation.dto.response.UserInfoRes;
 import com.ducami.dukkaebi.domain.user.presentation.dto.response.UserInfoWithActivityRes;
 import com.ducami.dukkaebi.domain.user.presentation.dto.response.UserListRes;
 import com.ducami.dukkaebi.domain.user.usecase.UserUseCase;
+import com.ducami.dukkaebi.global.common.PageResponse;
 import com.ducami.dukkaebi.global.common.Response;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -37,8 +38,11 @@ public class UserController {
 
     @GetMapping("/list")
     @Operation(summary = "전체 사용자 목록 조회(학생만)")
-    public List<UserListRes> getAllUsers() {
-        return userUseCase.getAllUsers();
+    public PageResponse<UserListRes> getAllUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "15") int size
+    ) {
+        return userUseCase.getAllUsersPaged(page, size);
     }
 
     @GetMapping("/info/{userId}")

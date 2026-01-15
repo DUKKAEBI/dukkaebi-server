@@ -7,13 +7,15 @@ import com.ducami.dukkaebi.domain.notice.presentation.dto.request.NoticeReq;
 import com.ducami.dukkaebi.domain.notice.presentation.dto.response.NoticeDetailRes;
 import com.ducami.dukkaebi.domain.notice.presentation.dto.response.NoticeListRes;
 import com.ducami.dukkaebi.domain.user.domain.User;
+import com.ducami.dukkaebi.global.common.PageResponse;
 import com.ducami.dukkaebi.global.common.Response;
 import com.ducami.dukkaebi.global.exception.CustomException;
 import com.ducami.dukkaebi.global.security.auth.UserSessionHolder;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.data.domain.Page;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -25,14 +27,15 @@ public class NoticeUseCase {
     private final UserSessionHolder userSessionHolder;
 
     @Transactional(readOnly = true)
-    public Page<NoticeListRes> getNoticeList(Pageable pageable) {
-        return noticeJpaRepo.findAll(pageable)
+    public PageResponse<NoticeListRes> getNoticeListPaged(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<NoticeListRes> noticePage = noticeJpaRepo.findAll(pageable)
                 .map(NoticeListRes::from);
+        return PageResponse.of(noticePage);
     }
 
     @Transactional(readOnly = true)
-    public List<NoticeListRes> searchNotices(
-            String keyword) {
+    public List<NoticeListRes> searchNotices(String keyword) {
         return noticeJpaRepo.searchByKeyword(keyword)
                 .stream().map(NoticeListRes::from).toList();
     }

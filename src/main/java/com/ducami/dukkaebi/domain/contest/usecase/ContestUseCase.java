@@ -17,6 +17,7 @@ import com.ducami.dukkaebi.domain.contest.service.ContestSseService;
 import com.ducami.dukkaebi.domain.contest.util.CodeGenerator;
 import com.ducami.dukkaebi.domain.problem.error.ProblemErrorCode;
 import com.ducami.dukkaebi.domain.user.domain.User;
+import com.ducami.dukkaebi.global.common.PageResponse;
 import com.ducami.dukkaebi.global.common.Response;
 import com.ducami.dukkaebi.global.exception.CustomException;
 import com.ducami.dukkaebi.global.security.auth.UserSessionHolder;
@@ -28,11 +29,15 @@ import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemJpaRepo;
 import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemTestCaseJpaRepo;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.request.ProblemCreateReq;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.response.ProblemRes;
+import com.ducami.dukkaebi.global.common.PageResponse;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,13 +58,13 @@ public class ContestUseCase {
     private static final ZoneId ZONE = ZoneId.of("Asia/Seoul");
 
     @Transactional(readOnly = true)
-    public java.util.List<ContestListRes> getContestList() {
+    public PageResponse<ContestListRes> getContestListPaged(int page, int size) {
         Long userId = userSessionHolder.getUserId();
 
-        return contestJpaRepo.findAllByOrderByEndDateAsc()
-                .stream()
-                .map(contest -> ContestListRes.from(contest, userId))
-                .toList();
+        Pageable pageable = PageRequest.of(page, size);
+        Page<ContestListRes> contestPage = contestJpaRepo.findAllByOrderByEndDateAsc(pageable)
+                .map(contest -> ContestListRes.from(contest, userId));
+        return PageResponse.of(contestPage);
     }
 
     @Transactional(readOnly = true)
@@ -86,13 +91,13 @@ public class ContestUseCase {
     }
 
     @Transactional(readOnly = true)
-    public List<ContestListRes> getContestWithName(String name) {
+    public PageResponse<ContestListRes> getContestWithNamePaged(String name, int page, int size) {
         Long userId = userSessionHolder.getUserId();
 
-        return contestJpaRepo.findByTitleContainingIgnoreCaseOrderByEndDateAsc(name)
-                .stream()
-                .map(contest -> ContestListRes.from(contest, userId))
-                .toList();
+        Pageable pageable = PageRequest.of(page, size);
+        Page<ContestListRes> contestPage = contestJpaRepo.findByTitleContainingIgnoreCaseOrderByEndDateAsc(name, pageable)
+                .map(contest -> ContestListRes.from(contest, userId));
+        return PageResponse.of(contestPage);
     }
 
     // 관리자
