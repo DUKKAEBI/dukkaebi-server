@@ -3,15 +3,18 @@ package com.ducami.dukkaebi.domain.contest.usecase;
 import com.ducami.dukkaebi.domain.contest.domain.Contest;
 import com.ducami.dukkaebi.domain.contest.domain.ContestParticipant;
 import com.ducami.dukkaebi.domain.contest.domain.ContestProblemScore;
+import com.ducami.dukkaebi.domain.contest.domain.ContestSubmission;
 import com.ducami.dukkaebi.domain.contest.domain.repo.ContestJpaRepo;
 import com.ducami.dukkaebi.domain.contest.domain.repo.ContestParticipantJpaRepo;
 import com.ducami.dukkaebi.domain.contest.domain.repo.ContestProblemScoreJpaRepo;
+import com.ducami.dukkaebi.domain.contest.domain.repo.ContestSubmissionJpaRepo;
 import com.ducami.dukkaebi.domain.contest.error.ContestErrorCode;
 import com.ducami.dukkaebi.domain.contest.presentation.dto.request.ContestReq;
 import com.ducami.dukkaebi.domain.contest.presentation.dto.request.ContestScoreUpdateReq;
 import com.ducami.dukkaebi.domain.contest.presentation.dto.response.ContestDetailRes;
 import com.ducami.dukkaebi.domain.contest.presentation.dto.response.ContestListRes;
 import com.ducami.dukkaebi.domain.contest.presentation.dto.response.ContestParticipantListRes;
+import com.ducami.dukkaebi.domain.contest.presentation.dto.response.ContestSubmissionRes;
 import com.ducami.dukkaebi.domain.contest.presentation.dto.response.ContestUpdateEvent;
 import com.ducami.dukkaebi.domain.contest.service.ContestSseService;
 import com.ducami.dukkaebi.domain.contest.util.CodeGenerator;
@@ -47,6 +50,7 @@ public class ContestUseCase {
     private final ContestJpaRepo contestJpaRepo;
     private final ContestParticipantJpaRepo contestParticipantJpaRepo;
     private final ContestProblemScoreJpaRepo contestProblemScoreJpaRepo;
+    private final ContestSubmissionJpaRepo contestSubmissionJpaRepo;
     private final CodeGenerator codeGenerator;
     private final UserSessionHolder userSessionHolder;
     private final ProblemJpaRepo problemJpaRepo;
@@ -345,6 +349,24 @@ public class ContestUseCase {
         contestParticipantJpaRepo.save(participant);
 
         return Response.ok("점수가 성공적으로 수정되었습니다.");
+    }
+
+     // 특정 학생의 특정 문제 제출 코드 조회
+    @Transactional(readOnly = true)
+    public ContestSubmissionRes getContestSubmissionByUser(String code, Long problemId, Long userId) {
+        // 대회 존재 확인
+        contestJpaRepo.findById(code)
+                .orElseThrow(() -> new CustomException(ContestErrorCode.CONTEST_NOT_FOUND));
+
+        // 제출 기록 조회
+        ContestSubmission submission = contestSubmissionJpaRepo
+                .findFirstByContest_CodeAndUser_IdAndProblem_ProblemIdOrderBySubmittedAtDesc(code, userId, problemId)
+                .orElseThrow(() -> new CustomException(ContestErrorCode.SUBMISSION_NOT_FOUND));
+
+        // 테스트 케이스 조회
+        List<ProblemTestCase> testCases = problemTestCaseJpaRepo.findByProblem_ProblemId(problemId);
+
+        return ContestSubmissionRes.from(submission, testCases);
     }
 
     // 시간 포맷팅 (초 -> HH:MM:SS)

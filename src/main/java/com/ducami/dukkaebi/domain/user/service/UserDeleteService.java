@@ -5,6 +5,7 @@ import com.ducami.dukkaebi.domain.contest.domain.ContestParticipant;
 import com.ducami.dukkaebi.domain.contest.domain.repo.ContestJpaRepo;
 import com.ducami.dukkaebi.domain.contest.domain.repo.ContestParticipantJpaRepo;
 import com.ducami.dukkaebi.domain.contest.domain.repo.ContestProblemScoreJpaRepo;
+import com.ducami.dukkaebi.domain.contest.domain.repo.ContestSubmissionJpaRepo;
 import com.ducami.dukkaebi.domain.course.domain.Course;
 import com.ducami.dukkaebi.domain.course.domain.repo.CourseJpaRepo;
 import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemHistoryJpaRepo;
@@ -33,16 +34,18 @@ public class UserDeleteService {
     private final ContestJpaRepo contestJpaRepo;
     private final ContestParticipantJpaRepo contestParticipantJpaRepo;
     private final ContestProblemScoreJpaRepo contestProblemScoreJpaRepo;
+    private final ContestSubmissionJpaRepo contestSubmissionJpaRepo;
 
     /**
      * 사용자와 관련된 모든 데이터를 삭제합니다.
      * 1. 사용자의 일일 활동 기록 삭제
      * 2. 사용자의 문제 풀이 기록 삭제
-     * 3. 사용자의 대회 문제별 점수 삭제 (ContestProblemScore)
-     * 4. 사용자의 대회 참가 기록 삭제 (ContestParticipant)
-     * 5. 코스 참가자 목록에서 제거
-     * 6. 콘테스트 참가자 목록에서 제거
-     * 7. 사용자 정보 삭제
+     * 3. 사용자의 대회 제출 코드 삭제 (ContestSubmission)
+     * 4. 사용자의 대회 문제별 점수 삭제 (ContestProblemScore)
+     * 5. 사용자의 대회 참가 기록 삭제 (ContestParticipant)
+     * 6. 코스 참가자 목록에서 제거
+     * 7. 콘테스트 참가자 목록에서 제거
+     * 8. 사용자 정보 삭제
      */
     @Transactional
     public Response deleteUserWithRelatedData(Long userId) {
@@ -91,7 +94,7 @@ public class UserDeleteService {
             log.info("코스 참가자 목록에서 제거 완료: {}개 코스", removedFromCourses);
         }
 
-        // 5. 콘테스트 참가자 목록에서 제거 (Contest 엔티티의 participantIds 리스트)
+        // 6. 콘테스트 참가자 목록에서 제거 (Contest 엔티티의 participantIds 리스트)
         List<Contest> contests = contestJpaRepo.findAll();
         int removedFromContests = 0;
         for (Contest contest : contests) {
@@ -105,7 +108,7 @@ public class UserDeleteService {
             log.info("콘테스트 참가자 목록에서 제거 완료: {}개 콘테스트", removedFromContests);
         }
 
-        // 6. 사용자 삭제
+        // 7. 사용자 삭제
         userJpaRepo.delete(user);
         log.info("사용자 삭제 완료: userId={}", userId);
 
