@@ -1,9 +1,13 @@
 package com.ducami.dukkaebi.domain.grading.service;
 
+import com.ducami.dukkaebi.domain.contest.domain.Contest;
 import com.ducami.dukkaebi.domain.contest.domain.ContestParticipant;
 import com.ducami.dukkaebi.domain.contest.domain.ContestProblemScore;
+import com.ducami.dukkaebi.domain.contest.domain.ContestSubmission;
+import com.ducami.dukkaebi.domain.contest.domain.repo.ContestJpaRepo;
 import com.ducami.dukkaebi.domain.contest.domain.repo.ContestParticipantJpaRepo;
 import com.ducami.dukkaebi.domain.contest.domain.repo.ContestProblemScoreJpaRepo;
+import com.ducami.dukkaebi.domain.contest.domain.repo.ContestSubmissionJpaRepo;
 import com.ducami.dukkaebi.domain.grading.domain.enums.JudgeStatus;
 import com.ducami.dukkaebi.domain.grading.model.ExecutionResult;
 import com.ducami.dukkaebi.domain.grading.presentation.dto.response.JudgeResultRes;
@@ -27,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -42,6 +47,8 @@ public class JudgeService {
     private final UserActivityService userActivityService;
     private final ContestParticipantJpaRepo contestParticipantJpaRepo;
     private final ContestProblemScoreJpaRepo contestProblemScoreJpaRepo;
+    private final ContestSubmissionJpaRepo contestSubmissionJpaRepo;
+    private final ContestJpaRepo contestJpaRepo;
 
     /**
      * 백준 스타일 코드 채점
@@ -206,9 +213,13 @@ public class JudgeService {
 
         log.info("채점 완료 - status: {}, passed: {}/{}", finalStatus, passedCount, testCases.size());
 
-        // 대회 문제인 경우 참여자 점수 및 시간 업데이트
+        // 대회 문제인 경우 처리
         if (problem.getContestId() != null && timeSpentSeconds != null) {
+            // 대회 참여자 점수 및 시간 업데이트
             updateContestParticipantScore(problem, finalStatus, timeSpentSeconds);
+
+            // 대회 문제 제출 코드 저장
+            saveContestSubmission(problem, code, language);
         }
 
         return new JudgeResultRes(
@@ -398,6 +409,47 @@ public class JudgeService {
 
         } catch (Exception e) {
             log.error("대회 참여자 점수 업데이트 실패: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 대회 문제 제출 코드 저장 (최종 제출 코드만 유지)
+     */
+    private void saveContestSubmission(Problem problem, String code, String language) {
+        try {
+            User user = userSessionHolder.getUser();
+            String contestCode = problem.getContestId();
+
+            Contest contest = contestJpaRepo.findById(contestCode)
+                    .orElseThrow(() -> new IllegalArgumentException("대회를 찾을 수 없습니다."));
+
+            // 기존 제출 기록 조회
+            Optional<ContestSubmission> existingSubmission = contestSubmissionJpaRepo
+                    .findFirstByContest_CodeAndUser_IdAndProblem_ProblemIdOrderBySubmittedAtDesc(
+                            contestCode, user.getId(), problem.getProblemId());
+
+            if (existingSubmission.isPresent()) {
+                // 기존 제출 기록 업데이트
+                ContestSubmission submission = existingSubmission.get();
+                submission.updateCode(code, language);
+                contestSubmissionJpaRepo.save(submission);
+                log.info("대회 제출 코드 업데이트 - userId: {}, problemId: {}, language: {}",
+                        user.getId(), problem.getProblemId(), language);
+            } else {
+                // 새로운 제출 기록 생성
+                ContestSubmission newSubmission = ContestSubmission.builder()
+                        .contest(contest)
+                        .problem(problem)
+                        .user(user)
+                        .code(code)
+                        .language(language)
+                        .build();
+                contestSubmissionJpaRepo.save(newSubmission);
+                log.info("대회 제출 코드 저장 - userId: {}, problemId: {}, language: {}",
+                        user.getId(), problem.getProblemId(), language);
+            }
+        } catch (Exception e) {
+            log.error("대회 제출 코드 저장 실패: {}", e.getMessage(), e);
         }
     }
 
