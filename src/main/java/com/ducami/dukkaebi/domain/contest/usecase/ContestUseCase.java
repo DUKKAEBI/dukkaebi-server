@@ -354,14 +354,19 @@ public class ContestUseCase {
      // 특정 학생의 특정 문제 제출 코드 조회
     @Transactional(readOnly = true)
     public ContestSubmissionRes getContestSubmissionByUser(String code, Long problemId, Long userId) {
+        // 대회 존재 확인
         contestJpaRepo.findById(code)
                 .orElseThrow(() -> new CustomException(ContestErrorCode.CONTEST_NOT_FOUND));
 
+        // 제출 기록 조회
         ContestSubmission submission = contestSubmissionJpaRepo
                 .findFirstByContest_CodeAndUser_IdAndProblem_ProblemIdOrderBySubmittedAtDesc(code, userId, problemId)
                 .orElseThrow(() -> new CustomException(ContestErrorCode.SUBMISSION_NOT_FOUND));
 
-        return ContestSubmissionRes.from(submission);
+        // 테스트 케이스 조회
+        List<ProblemTestCase> testCases = problemTestCaseJpaRepo.findByProblem_ProblemId(problemId);
+
+        return ContestSubmissionRes.from(submission, testCases);
     }
 
     // 시간 포맷팅 (초 -> HH:MM:SS)
