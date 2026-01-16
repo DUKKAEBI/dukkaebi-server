@@ -20,13 +20,13 @@ public class JudgeController {
     private final JudgeUseCase judgeUseCase;
 
     @PostMapping("/grading")
-    @Operation(summary = "문제 제출하기", description = "language : java or python")
+    @Operation(summary = "문제 제출하기", description = "language : java or python or cpp")
     public JudgeResultRes submitCode(@RequestBody CodeSubmitReq request) {
         return judgeUseCase.submitCode(request);
     }
 
     @PostMapping("/test")
-    @Operation(summary = "코드 테스트하기 (제출 없이)", description = "language : java or python. 점수나 기록이 남지 않고 테스트만 수행합니다.")
+    @Operation(summary = "코드 테스트하기 (제출 없이)", description = "language : java or python or cpp. 점수나 기록이 남지 않고 테스트만 수행합니다.")
     public JudgeResultRes testCode(@RequestBody CodeTestReq request) {
         return judgeUseCase.testCode(request);
     }

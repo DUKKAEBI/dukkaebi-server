@@ -11,5 +11,6 @@ import java.util.Optional;
 public interface ContestProblemScoreJpaRepo extends JpaRepository<ContestProblemScore, Long> {
     List<ContestProblemScore> findByParticipant_Id(Long participantId);
     Optional<ContestProblemScore> findByParticipant_IdAndProblem_ProblemId(Long participantId, Long problemId);
+    int deleteByParticipant_IdIn(List<Long> participantIds);
 }
 
