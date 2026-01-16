@@ -12,5 +12,7 @@ public interface ContestParticipantJpaRepo extends JpaRepository<ContestParticip
     List<ContestParticipant> findByContest_CodeOrderByTotalScoreDescTotalTimeSecondsAsc(String contestCode);
     Optional<ContestParticipant> findByContest_CodeAndUser_Id(String contestCode, Long userId);
     boolean existsByContest_CodeAndUser_Id(String contestCode, Long userId);
+    List<ContestParticipant> findByUser_Id(Long userId);
+    int deleteByUser_Id(Long userId);
 }
 
