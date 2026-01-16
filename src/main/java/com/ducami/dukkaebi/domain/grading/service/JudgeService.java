@@ -222,6 +222,120 @@ public class JudgeService {
     }
 
     /**
+     * 코드 테스트 (제출 없이 테스트만 수행)
+     * - 점수 부여 없음
+     * - ProblemHistory 기록 없음
+     * - Problem 통계 업데이트 없음
+     */
+    public JudgeResultRes testCode(Long problemId, String code, String language) {
+        log.info("코드 테스트 시작 - problemId: {}, language: {}", problemId, language);
+
+        // 1. 문제 조회
+        Problem problem = problemJpaRepo.findById(problemId)
+                .orElseThrow(() -> new IllegalArgumentException("문제를 찾을 수 없습니다."));
+
+        // 2. 테스트케이스 조회
+        List<ProblemTestCase> testCases = testCaseJpaRepo.findByProblem_ProblemId(problemId);
+
+        if (testCases.isEmpty()) {
+            throw new IllegalStateException("테스트케이스가 없습니다.");
+        }
+
+        // 3. 각 테스트케이스 실행
+        List<JudgeResultRes.TestCaseResult> results = new ArrayList<>();
+        int passedCount = 0;
+        long totalExecutionTime = 0;
+        JudgeStatus finalStatus = JudgeStatus.ACCEPTED;
+        String errorMessage = null;
+
+        for (int i = 0; i < testCases.size(); i++) {
+            ProblemTestCase testCase = testCases.get(i);
+
+            try {
+                long startTime = System.currentTimeMillis();
+
+                // 코드 실행 (5초 타임아웃)
+                ExecutionResult result = codeExecutor.execute(
+                        code,
+                        language,
+                        testCase.getInput(),
+                        5000
+                );
+
+                long executionTime = System.currentTimeMillis() - startTime;
+                totalExecutionTime += executionTime;
+
+                // 실행 실패 체크
+                if (!result.success()) {
+                    finalStatus = JudgeStatus.RUNTIME_ERROR;
+                    errorMessage = result.error();
+
+                    results.add(new JudgeResultRes.TestCaseResult(
+                            i + 1, false, testCase.getInput(), testCase.getOutput(), result.error()
+                    ));
+                    break;
+                }
+
+                // 타임아웃 체크
+                if (result.timeout()) {
+                    finalStatus = JudgeStatus.TIME_LIMIT_EXCEEDED;
+                    errorMessage = "시간 초과";
+
+                    results.add(new JudgeResultRes.TestCaseResult(
+                            i + 1, false, testCase.getInput(), testCase.getOutput(), "시간 초과"
+                    ));
+                    break;
+                }
+
+                // 출력 비교 (공백, 줄바꿈 정규화)
+                String expected = normalizeOutput(testCase.getOutput());
+                String actual = normalizeOutput(result.output());
+                boolean passed = expected.equals(actual);
+
+                if (passed) {
+                    passedCount++;
+                } else {
+                    finalStatus = JudgeStatus.WRONG_ANSWER;
+                }
+
+                results.add(new JudgeResultRes.TestCaseResult(
+                        i + 1,
+                        passed,
+                        testCase.getInput(),
+                        testCase.getOutput(),
+                        result.output()
+                ));
+
+                // 첫 번째 오답에서 멈춤
+                if (!passed) {
+                    break;
+                }
+
+            } catch (Exception e) {
+                log.error("테스트케이스 실행 중 예외 발생: {}", e.getMessage(), e);
+                finalStatus = JudgeStatus.RUNTIME_ERROR;
+                errorMessage = e.getMessage();
+
+                results.add(new JudgeResultRes.TestCaseResult(
+                        i + 1, false, testCase.getInput(), testCase.getOutput(), "실행 에러: " + e.getMessage()
+                ));
+                break;
+            }
+        }
+
+        log.info("테스트 완료 - status: {}, passed: {}/{}", finalStatus, passedCount, testCases.size());
+
+        return new JudgeResultRes(
+                finalStatus,
+                passedCount,
+                testCases.size(),
+                totalExecutionTime,
+                errorMessage,
+                results
+        );
+    }
+
+    /**
      * 대회 참여자의 점수 및 시간 업데이트
      */
     private void updateContestParticipantScore(Problem problem, JudgeStatus status, Integer timeSpentSeconds) {
