@@ -5,6 +5,7 @@ import com.ducami.dukkaebi.domain.notice.domain.repo.NoticeJpaRepo;
 import com.ducami.dukkaebi.domain.notice.error.NoticeErrorCode;
 import com.ducami.dukkaebi.domain.notice.presentation.dto.request.NoticeReq;
 import com.ducami.dukkaebi.domain.notice.presentation.dto.response.NoticeDetailRes;
+import com.ducami.dukkaebi.domain.notice.presentation.dto.response.NoticeHomeRes;
 import com.ducami.dukkaebi.domain.notice.presentation.dto.response.NoticeListRes;
 import com.ducami.dukkaebi.domain.user.domain.User;
 import com.ducami.dukkaebi.global.common.dto.response.PageResponse;
@@ -32,6 +33,14 @@ public class NoticeUseCase {
         Page<NoticeListRes> noticePage = noticeJpaRepo.findAll(pageable)
                 .map(NoticeListRes::from);
         return PageResponse.of(noticePage);
+    }
+
+    @Transactional(readOnly = true)
+    public List<NoticeHomeRes> getRecentNoticesForHome() {
+        return noticeJpaRepo.findTop5ByOrderByCreatedAtDesc()
+                .stream()
+                .map(NoticeHomeRes::from)
+                .toList();
     }
 
     @Transactional(readOnly = true)

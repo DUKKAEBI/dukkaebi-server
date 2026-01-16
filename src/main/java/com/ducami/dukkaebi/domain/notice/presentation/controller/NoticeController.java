@@ -1,6 +1,7 @@
 package com.ducami.dukkaebi.domain.notice.presentation.controller;
 
 import com.ducami.dukkaebi.domain.notice.presentation.dto.response.NoticeDetailRes;
+import com.ducami.dukkaebi.domain.notice.presentation.dto.response.NoticeHomeRes;
 import com.ducami.dukkaebi.domain.notice.presentation.dto.response.NoticeListRes;
 import com.ducami.dukkaebi.domain.notice.usecase.NoticeUseCase;
 import com.ducami.dukkaebi.global.common.dto.response.PageResponse;
@@ -25,6 +26,12 @@ public class NoticeController {
             @RequestParam(defaultValue = "15") int size
     ) {
         return noticeUseCase.getNoticeListPaged(page, size);
+    }
+
+    @GetMapping("/home")
+    @Operation(summary = "홈화면 최신 공지사항 5개 조회")
+    public List<NoticeHomeRes> getRecentNoticesForHome() {
+        return noticeUseCase.getRecentNoticesForHome();
     }
 
     @GetMapping("/{noticeId}")
