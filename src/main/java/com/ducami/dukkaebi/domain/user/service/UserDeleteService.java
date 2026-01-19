@@ -62,12 +62,16 @@ public class UserDeleteService {
         int deletedHistories = problemHistoryJpaRepo.deleteByUser_Id(userId);
         log.info("문제 풀이 기록 삭제 완료: {}건", deletedHistories);
 
-        // 3. 대회 관련 데이터 삭제
-        // 3-1. 사용자의 ContestParticipant 조회
+        // 3. 대회 제출 코드 삭제
+        int deletedSubmissions = contestSubmissionJpaRepo.deleteByUser_Id(userId);
+        log.info("대회 제출 코드 삭제 완료: {}건", deletedSubmissions);
+
+        // 4. 대회 관련 데이터 삭제
+        // 4-1. 사용자의 ContestParticipant 조회
         List<ContestParticipant> participants = contestParticipantJpaRepo.findByUser_Id(userId);
 
         if (!participants.isEmpty()) {
-            // 3-2. ContestProblemScore 삭제 (참가 기록에 연결된 문제별 점수)
+            // 4-2. ContestProblemScore 삭제 (참가 기록에 연결된 문제별 점수)
             List<Long> participantIds = participants.stream()
                     .map(ContestParticipant::getId)
                     .collect(Collectors.toList());
@@ -75,12 +79,12 @@ public class UserDeleteService {
             int deletedProblemScores = contestProblemScoreJpaRepo.deleteByParticipant_IdIn(participantIds);
             log.info("대회 문제별 점수 삭제 완료: {}건", deletedProblemScores);
 
-            // 3-3. ContestParticipant 삭제
+            // 4-3. ContestParticipant 삭제
             int deletedParticipants = contestParticipantJpaRepo.deleteByUser_Id(userId);
             log.info("대회 참가 기록 삭제 완료: {}건", deletedParticipants);
         }
 
-        // 4. 코스 참가자 목록에서 제거
+        // 5. 코스 참가자 목록에서 제거
         List<Course> courses = courseJpaRepo.findAll();
         int removedFromCourses = 0;
         for (Course course : courses) {
