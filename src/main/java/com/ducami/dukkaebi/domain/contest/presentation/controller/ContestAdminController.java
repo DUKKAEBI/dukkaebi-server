@@ -1,5 +1,7 @@
 package com.ducami.dukkaebi.domain.contest.presentation.controller;
 
+import com.ducami.dukkaebi.domain.contest.presentation.dto.request.ContestAddProblemsReq;
+import com.ducami.dukkaebi.domain.contest.presentation.dto.request.ContestProblemScoreReq;
 import com.ducami.dukkaebi.domain.contest.presentation.dto.request.ContestReq;
 import com.ducami.dukkaebi.domain.contest.presentation.dto.request.ContestScoreUpdateReq;
 import com.ducami.dukkaebi.domain.contest.presentation.dto.response.ContestParticipantListRes;
@@ -58,8 +60,27 @@ public class ContestAdminController {
         return contestUseCase.createContestProblem(code, req);
     }
 
+    @PostMapping("/{code}/problem/add")
+    @Operation(summary = "일반 문제들을 대회에 추가")
+    public Response addExistingProblemsToContest(
+            @PathVariable("code") String code,
+            @RequestBody ContestAddProblemsReq req
+    ) {
+        return contestUseCase.addExistingProblemsToContest(code, req.problemIds());
+    }
+
+    @PatchMapping("/{code}/problem/{problemId}/score")
+    @Operation(summary = "대회 문제 점수 수정 (가져온 일반 문제용)")
+    public Response updateContestProblemScore(
+            @PathVariable("code") String code,
+            @PathVariable("problemId") Long problemId,
+            @RequestBody ContestProblemScoreReq req
+    ) {
+        return contestUseCase.updateContestProblemScore(code, problemId, req.score());
+    }
+
     @PatchMapping("/{code}/problem/{problemId}")
-    @Operation(summary = "대회 문제 수정")
+    @Operation(summary = "대회 전용 문제 수정")
     public Response updateContestProblem(
             @PathVariable("code") String code,
             @PathVariable("problemId") Long problemId,
