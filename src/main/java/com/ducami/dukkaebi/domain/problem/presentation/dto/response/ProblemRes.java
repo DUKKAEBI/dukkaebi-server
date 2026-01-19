@@ -35,6 +35,10 @@ public record ProblemRes (
     }
 
     public static ProblemRes from(Problem problem, ProblemHistory history, Integer contestScore) {
+        // contestScore가 null이 아니면 일반 문제를 대회에 가져온 것 (false)
+        // problem.getContestId()가 null이 아니면 대회 전용 문제 (true)
+        Boolean isContestOnly = problem.getContestId() != null ? true : (contestScore != null ? false : null);
+
         return new ProblemRes(
                 problem.getProblemId(),
                 problem.getName(),
@@ -44,7 +48,7 @@ public record ProblemRes (
                 calculateCorrectRate(problem.getSolvedCount(), problem.getAttemptCount()),
                 getSolvedResult(history),
                 problem.getAddedAt(),
-                problem.getContestId() != null  // contestId가 있으면 대회 전용 문제
+                isContestOnly
         );
     }
 

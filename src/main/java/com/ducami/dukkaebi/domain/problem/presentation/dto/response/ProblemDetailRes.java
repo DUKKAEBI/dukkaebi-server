@@ -47,7 +47,7 @@ public record ProblemDetailRes(
                 exampleInput,
                 exampleOutput,
                 testCaseResList,
-                problem.getContestId() != null  // contestId가 있으면 대회 전용 문제
+                problem.getContestId() != null ? true : null  // contestId가 있으면 대회 전용 문제(true), 없으면 일반 문제(null)
         );
     }
 
