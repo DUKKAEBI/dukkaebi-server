@@ -21,6 +21,10 @@ public record ProblemDetailRes(
         Boolean isContestOnly  // true: 대회 전용 문제, false: 일반 문제를 가져온 것, null: 일반 문제
 ) {
     public static ProblemDetailRes from(Problem problem, List<ProblemTestCase> testCases) {
+        return from(problem, testCases, null);
+    }
+
+    public static ProblemDetailRes from(Problem problem, List<ProblemTestCase> testCases, Integer contestScore) {
 
         String exampleInput = "";
         String exampleOutput = "";
@@ -37,17 +41,20 @@ public record ProblemDetailRes(
                 ? testCases.stream().map(TestCaseRes::from).toList()
                 : List.of();
 
+        // isContestOnly 결정
+        Boolean isContestOnly = problem.getContestId() != null ? true : (contestScore != null ? false : null);
+
         return new ProblemDetailRes(
                 problem.getName(),
                 problem.getDescription(),
                 problem.getInput(),
                 problem.getOutput(),
                 problem.getDifficulty(),
-                problem.getScore(),
+                contestScore != null ? contestScore : problem.getScore(),  // 대회 점수 우선
                 exampleInput,
                 exampleOutput,
                 testCaseResList,
-                problem.getContestId() != null ? true : null  // contestId가 있으면 대회 전용 문제(true), 없으면 일반 문제(null)
+                isContestOnly
         );
     }
 

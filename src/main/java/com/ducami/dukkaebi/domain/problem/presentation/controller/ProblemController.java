@@ -46,7 +46,10 @@ public class ProblemController {
 
     @GetMapping("/{problemId}")
     @Operation(summary = "문제 자세히 보기")
-    public ProblemDetailRes getProblem(@PathVariable Long problemId) {
-        return problemUseCase.getOneProblem(problemId);
+    public ProblemDetailRes getProblem(
+            @PathVariable Long problemId,
+            @RequestParam(required = false) String contestCode
+    ) {
+        return problemUseCase.getOneProblem(problemId, contestCode);
     }
 }

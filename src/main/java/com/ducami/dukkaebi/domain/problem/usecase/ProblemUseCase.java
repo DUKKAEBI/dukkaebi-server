@@ -63,11 +63,11 @@ public class ProblemUseCase {
         return problemService.getProblemsWithName(name);
     }
 
-    public ProblemDetailRes getOneProblem(Long problemId) {
+    public ProblemDetailRes getOneProblem(Long problemId, String contestCode) {
         try {
-            log.info("문제 조회 요청");
+            log.info("문제 조회 요청 - problemId: {}, contestCode: {}", problemId, contestCode);
 
-            ProblemDetailRes problem = problemService.getProblem(problemId);
+            ProblemDetailRes problem = problemService.getProblem(problemId, contestCode);
 
             log.info("문제 조회 성공");
 
