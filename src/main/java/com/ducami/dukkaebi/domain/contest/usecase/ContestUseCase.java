@@ -92,7 +92,17 @@ public class ContestUseCase {
             if (userId != null) {
                 history = problemHistoryJpaRepo.findByUser_IdAndProblem_ProblemId(userId, p.getProblemId()).orElse(null);
             }
-            problemResList.add(ProblemRes.from(p, history));
+
+            // 일반 문제의 경우 ContestProblemMapping에서 점수 조회
+            Integer contestScore = null;
+            if (p.getContestId() == null) {
+                // 일반 문제인 경우 매핑 테이블에서 점수 조회
+                contestScore = contestProblemMappingJpaRepo.findByContest_CodeAndProblem_ProblemId(code, p.getProblemId())
+                        .map(ContestProblemMapping::getScore)
+                        .orElse(null);
+            }
+
+            problemResList.add(ProblemRes.from(p, history, contestScore));
         }
 
         return ContestDetailRes.from(contest, problemResList, userId);

@@ -31,6 +31,19 @@ public record ProblemRes (
         );
     }
 
+    public static ProblemRes from(Problem problem, ProblemHistory history, Integer contestScore) {
+        return new ProblemRes(
+                problem.getProblemId(),
+                problem.getName(),
+                problem.getDifficulty(),
+                contestScore != null ? contestScore : problem.getScore(),
+                problem.getSolvedCount(),
+                calculateCorrectRate(problem.getSolvedCount(), problem.getAttemptCount()),
+                getSolvedResult(history),
+                problem.getAddedAt()
+        );
+    }
+
     private static SolvedResult getSolvedResult(ProblemHistory problemHistory) {
         return problemHistory != null ? problemHistory.getSolvedResult() : SolvedResult.NOT_SOLVED;
     }
