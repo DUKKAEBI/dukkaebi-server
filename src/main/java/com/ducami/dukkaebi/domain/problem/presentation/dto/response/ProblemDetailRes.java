@@ -17,7 +17,8 @@ public record ProblemDetailRes(
         Integer score,
         String exampleInput,
         String exampleOutput,
-        List<TestCaseRes> testCases
+        List<TestCaseRes> testCases,
+        Boolean isContestOnly  // true: 대회 전용 문제, false: 일반 문제를 가져온 것, null: 일반 문제
 ) {
     public static ProblemDetailRes from(Problem problem, List<ProblemTestCase> testCases) {
 
@@ -45,7 +46,8 @@ public record ProblemDetailRes(
                 problem.getScore(),
                 exampleInput,
                 exampleOutput,
-                testCaseResList
+                testCaseResList,
+                problem.getContestId() != null  // contestId가 있으면 대회 전용 문제
         );
     }
 
