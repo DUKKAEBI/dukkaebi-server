@@ -2,6 +2,7 @@ package com.ducami.dukkaebi.domain.problem.presentation.dto.response;
 
 import com.ducami.dukkaebi.domain.problem.domain.Problem;
 import com.ducami.dukkaebi.domain.problem.domain.ProblemTestCase;
+import com.ducami.dukkaebi.domain.problem.domain.enums.DifficultyType;
 import lombok.Builder;
 
 import java.util.List;
@@ -12,8 +13,11 @@ public record ProblemDetailRes(
         String description,
         String input,
         String output,
+        DifficultyType difficulty,
+        Integer score,
         String exampleInput,
-        String exampleOutput
+        String exampleOutput,
+        List<TestCaseRes> testCases
 ) {
     public static ProblemDetailRes from(Problem problem, List<ProblemTestCase> testCases) {
 
@@ -27,13 +31,21 @@ public record ProblemDetailRes(
             exampleOutput = normalize(first.getOutput());
         }
 
+        // 테스트케이스를 DTO로 변환
+        List<TestCaseRes> testCaseResList = testCases != null
+                ? testCases.stream().map(TestCaseRes::from).toList()
+                : List.of();
+
         return new ProblemDetailRes(
                 problem.getName(),
                 problem.getDescription(),
                 problem.getInput(),
                 problem.getOutput(),
+                problem.getDifficulty(),
+                problem.getScore(),
                 exampleInput,
-                exampleOutput
+                exampleOutput,
+                testCaseResList
         );
     }
 
@@ -49,3 +61,4 @@ public record ProblemDetailRes(
         return text;
     }
 }
+
