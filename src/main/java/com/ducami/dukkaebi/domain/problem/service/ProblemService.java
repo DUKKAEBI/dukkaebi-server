@@ -115,35 +115,29 @@ public class ProblemService {
      * 문제 상세 조회
      */
     public ProblemDetailRes getProblem(Long problemId, String contestCode) {
-        try {
-            log.info("문제 상세 조회 - problemId: {}, contestCode: {}", problemId, contestCode);
+        log.info("문제 상세 조회 - problemId: {}, contestCode: {}", problemId, contestCode);
 
-            // 1. 문제 조회
-            Problem problem = problemJpaRepo.findById(problemId)
-                    .orElseThrow(() -> new IllegalArgumentException("문제를 찾을 수 없습니다. ID: " + problemId));
+        // 1. 문제 조회
+        Problem problem = problemJpaRepo.findById(problemId)
+                .orElseThrow(() -> new IllegalArgumentException("문제를 찾을 수 없습니다. ID: " + problemId));
 
-            // 2. 테스트케이스 조회
-            List<ProblemTestCase> testCases = problemTestCaseJpaRepo.findByProblem_ProblemId(problemId);
+        // 2. 테스트케이스 조회
+        List<ProblemTestCase> testCases = problemTestCaseJpaRepo.findByProblem_ProblemId(problemId);
 
-            // 3. 대회 점수 조회 (contestCode가 있는 경우)
-            Integer contestScore = null;
-            if (contestCode != null && !contestCode.isBlank()) {
-                contestScore = contestProblemMappingJpaRepo.findByContest_CodeAndProblem_ProblemId(contestCode, problemId)
-                        .map(ContestProblemMapping::getScore)
-                        .orElse(null);
-                log.info("대회 점수 조회 - contestCode: {}, problemId: {}, score: {}", contestCode, problemId, contestScore);
-            }
-
-            // 4. DTO 변환
-            ProblemDetailRes response = ProblemDetailRes.from(problem, testCases, contestScore);
-
-            log.info("문제 상세 조회 완료 - problemId: {}, testCases: {}개", problemId, testCases.size());
-            return response;
-
-        } catch (Exception e) {
-            log.error("문제 상세 조회 실패 - problemId: {}, error: {}", problemId, e.getMessage(), e);
-            throw new RuntimeException("문제 상세 조회에 실패했습니다.", e);
+        // 3. 대회 점수 조회 (contestCode가 있는 경우)
+        Integer contestScore = null;
+        if (contestCode != null && !contestCode.isBlank()) {
+            contestScore = contestProblemMappingJpaRepo.findByContest_CodeAndProblem_ProblemId(contestCode, problemId)
+                    .map(ContestProblemMapping::getScore)
+                    .orElse(null);
+            log.info("대회 점수 조회 - contestCode: {}, problemId: {}, score: {}", contestCode, problemId, contestScore);
         }
+
+        // 4. DTO 변환
+        ProblemDetailRes response = ProblemDetailRes.from(problem, testCases, contestScore);
+
+        log.info("문제 상세 조회 완료 - problemId: {}, testCases: {}개", problemId, testCases.size());
+        return response;
     }
 
     /**
