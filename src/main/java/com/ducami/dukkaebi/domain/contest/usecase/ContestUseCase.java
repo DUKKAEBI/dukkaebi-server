@@ -19,6 +19,7 @@ import com.ducami.dukkaebi.domain.contest.presentation.dto.response.ContestUpdat
 import com.ducami.dukkaebi.domain.contest.service.ContestSseService;
 import com.ducami.dukkaebi.domain.contest.util.CodeGenerator;
 import com.ducami.dukkaebi.domain.problem.error.ProblemErrorCode;
+import com.ducami.dukkaebi.domain.problem.presentation.dto.request.ProblemUpdateReq;
 import com.ducami.dukkaebi.domain.user.domain.User;
 import com.ducami.dukkaebi.global.common.dto.response.PageResponse;
 import com.ducami.dukkaebi.global.common.dto.response.Response;
@@ -274,6 +275,43 @@ public class ContestUseCase {
         contestJpaRepo.save(contest);
 
         return Response.created("대회 전용 문제가 성공적으로 생성되었습니다.");
+    }
+
+    // 대회 문제 수정
+    @Transactional
+    public Response updateContestProblem(String code, Long problemId, ProblemUpdateReq req) {
+        Contest contest = contestJpaRepo.findById(code)
+                .orElseThrow(() -> new CustomException(ContestErrorCode.CONTEST_NOT_FOUND));
+
+        Problem problem = problemJpaRepo.findById(problemId)
+                .orElseThrow(() -> new CustomException(ProblemErrorCode.PROBLEM_NOT_FOUND));
+
+        // 대회 전용 문제인지 확인
+        if (!code.equals(problem.getContestId())) {
+            throw new CustomException(ContestErrorCode.NOT_CONTEST_PROBLEM);
+        }
+
+        // 문제 정보 수정 (대회 문제는 difficulty는 null, score는 필수)
+        problem.updateContestProblem(req.name(), req.description(), req.input(), req.output(), req.score());
+        problemJpaRepo.save(problem);
+
+        // 기존 테스트 케이스 삭제
+        List<ProblemTestCase> existingTestCases = problemTestCaseJpaRepo.findByProblem_ProblemId(problemId);
+        problemTestCaseJpaRepo.deleteAll(existingTestCases);
+
+        // 새로운 테스트 케이스 저장
+        if (req.testCases() != null && !req.testCases().isEmpty()) {
+            for (ProblemCreateReq.TestCaseReq tcReq : req.testCases()) {
+                ProblemTestCase testCase = ProblemTestCase.builder()
+                        .problem(problem)
+                        .input(tcReq.input())
+                        .output(tcReq.output())
+                        .build();
+                problemTestCaseJpaRepo.save(testCase);
+            }
+        }
+
+        return Response.ok("대회 문제가 성공적으로 수정되었습니다.");
     }
 
     // 대회 문제 삭제

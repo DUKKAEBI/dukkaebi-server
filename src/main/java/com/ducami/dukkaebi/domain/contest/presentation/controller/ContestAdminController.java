@@ -6,6 +6,7 @@ import com.ducami.dukkaebi.domain.contest.presentation.dto.response.ContestParti
 import com.ducami.dukkaebi.domain.contest.presentation.dto.response.ContestSubmissionRes;
 import com.ducami.dukkaebi.domain.contest.usecase.ContestUseCase;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.request.ProblemCreateReq;
+import com.ducami.dukkaebi.domain.problem.presentation.dto.request.ProblemUpdateReq;
 import com.ducami.dukkaebi.global.common.dto.response.Response;
 import com.ducami.dukkaebi.global.common.dto.response.ResponseData;
 import com.ducami.dukkaebi.global.common.service.S3Service;
@@ -55,6 +56,16 @@ public class ContestAdminController {
     @Operation(summary = "대회 전용 문제 생성")
     public Response createContestProblem(@PathVariable("code") String code, @RequestBody ProblemCreateReq req) {
         return contestUseCase.createContestProblem(code, req);
+    }
+
+    @PatchMapping("/{code}/problem/{problemId}")
+    @Operation(summary = "대회 문제 수정")
+    public Response updateContestProblem(
+            @PathVariable("code") String code,
+            @PathVariable("problemId") Long problemId,
+            @RequestBody ProblemUpdateReq req
+    ) {
+        return contestUseCase.updateContestProblem(code, problemId, req);
     }
 
     @DeleteMapping("/{code}/problem/{problemId}")

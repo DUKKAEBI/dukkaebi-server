@@ -57,6 +57,15 @@ public class Problem {
         this.difficulty = difficulty;
     }
 
+    public void updateContestProblem(String name, String description, String input, String output, Integer score) {
+        this.name = name;
+        this.description = description;
+        this.input = input;
+        this.output = output;
+        this.score = score;
+        this.difficulty = null;  // 대회 문제는 difficulty null
+    }
+
     public void incrementSolvedCount() {
         this.solvedCount++;
     }
