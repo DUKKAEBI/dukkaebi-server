@@ -2,6 +2,7 @@ package com.ducami.dukkaebi.domain.user.usecase;
 
 import com.ducami.dukkaebi.domain.user.domain.User;
 import com.ducami.dukkaebi.domain.user.domain.enums.SortType;
+import com.ducami.dukkaebi.domain.user.domain.enums.UserType;
 import com.ducami.dukkaebi.domain.user.domain.repo.UserJpaRepo;
 import com.ducami.dukkaebi.domain.user.error.UserErrorCode;
 import com.ducami.dukkaebi.domain.user.presentation.dto.response.UserInfoRes;
@@ -27,8 +28,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-import static com.ducami.dukkaebi.domain.user.domain.enums.UserType.STUDENT;
-
 @Service
 @RequiredArgsConstructor
 public class UserUseCase {
@@ -47,7 +46,7 @@ public class UserUseCase {
 
     public PageResponse<UserListRes> getAllUsersPaged(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<UserListRes> userPage = userJpaRepo.findByRole(STUDENT, pageable)
+        Page<UserListRes> userPage = userJpaRepo.findByRole(UserType.STUDENT, pageable)
                 .map(UserListRes::from);
         return PageResponse.of(userPage);
     }
