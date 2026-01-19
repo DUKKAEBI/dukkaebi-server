@@ -3,6 +3,7 @@ package com.ducami.dukkaebi.domain.problem.usecase;
 import com.ducami.dukkaebi.domain.problem.domain.Problem;
 import com.ducami.dukkaebi.domain.problem.domain.ProblemTestCase;
 import com.ducami.dukkaebi.domain.problem.domain.enums.DifficultyType;
+import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemHistoryJpaRepo;
 import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemJpaRepo;
 import com.ducami.dukkaebi.domain.problem.domain.repo.ProblemTestCaseJpaRepo;
 import com.ducami.dukkaebi.domain.problem.error.ProblemErrorCode;
@@ -31,6 +32,7 @@ public class ProblemUseCase {
     private final ProblemService problemService;
     private final ProblemJpaRepo problemJpaRepo;
     private final ProblemTestCaseJpaRepo testCaseJpaRepo;
+    private final ProblemHistoryJpaRepo problemHistoryJpaRepo;
 
     public PageResponse<ProblemRes> getProblemPaged(int page, int size) {
         try {
@@ -128,7 +130,17 @@ public class ProblemUseCase {
         Problem problem = problemJpaRepo.findById(problemId)
                 .orElseThrow(() -> new CustomException(ProblemErrorCode.PROBLEM_NOT_FOUND));
 
+        // 1. 테스트 케이스 삭제
         testCaseJpaRepo.deleteAll(testCaseJpaRepo.findByProblem_ProblemId(problemId));
+
+        // 2. ProblemHistory 삭제 (CASCADE가 없으면 필요)
+        problemHistoryJpaRepo.deleteAll(
+                problemHistoryJpaRepo.findAll().stream()
+                        .filter(h -> h.getProblem().getProblemId().equals(problemId))
+                        .toList()
+        );
+
+        // 3. 문제 삭제
         problemJpaRepo.delete(problem);
 
         return Response.ok("문제가 성공적으로 삭제되었습니다.");

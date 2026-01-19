@@ -149,51 +149,40 @@ public class ContestUseCase {
         Contest contest = contestJpaRepo.findById(code)
                 .orElseThrow(() -> new CustomException(ContestErrorCode.CONTEST_NOT_FOUND));
 
-        // 1. 대회에 속한 모든 참가자 조회
-        List<ContestParticipant> participants = contestParticipantJpaRepo
-                .findByContest_CodeOrderByTotalScoreDescTotalTimeSecondsAsc(code);
-
-        // 2. ContestSubmission 삭제 (제출 코드)
-        if (!participants.isEmpty()) {
-            List<Long> userIds = participants.stream()
-                    .map(p -> p.getUser().getId())
-                    .toList();
-
-            // 대회의 모든 문제에 대한 제출 코드 삭제
-            List<Problem> contestProblems = problemJpaRepo.findAll().stream()
-                    .filter(p -> code.equals(p.getContestId()))
-                    .toList();
-
-            for (Problem problem : contestProblems) {
-                for (Long userId : userIds) {
-                    contestSubmissionJpaRepo.findFirstByContest_CodeAndUser_IdAndProblem_ProblemIdOrderBySubmittedAtDesc(
-                            code, userId, problem.getProblemId()
-                    ).ifPresent(contestSubmissionJpaRepo::delete);
-                }
-            }
-        }
-
-        // 3. ContestProblemScore 삭제 (문제별 점수)
-        if (!participants.isEmpty()) {
-            List<Long> participantIds = participants.stream()
-                    .map(ContestParticipant::getId)
-                    .toList();
-            contestProblemScoreJpaRepo.deleteByParticipant_IdIn(participantIds);
-        }
-
-        // 4. ContestParticipant 삭제 (참가자)
-        contestParticipantJpaRepo.deleteAll(participants);
-
-        // 5. 대회 문제들의 테스트케이스 삭제
+        // 1. 대회 문제들 조회
         List<Problem> problems = problemJpaRepo.findAll().stream()
                 .filter(p -> code.equals(p.getContestId()))
                 .toList();
 
+        // 2. 대회 참가자들 조회
+        List<ContestParticipant> participants = contestParticipantJpaRepo
+                .findByContest_CodeOrderByTotalScoreDescTotalTimeSecondsAsc(code);
+
+        // 3. 각 문제에 대한 ContestSubmission 삭제 (제출 코드)
         for (Problem problem : problems) {
+            for (ContestParticipant participant : participants) {
+                contestSubmissionJpaRepo.findFirstByContest_CodeAndUser_IdAndProblem_ProblemIdOrderBySubmittedAtDesc(
+                        code, participant.getUser().getId(), problem.getProblemId()
+                ).ifPresent(contestSubmissionJpaRepo::delete);
+            }
+        }
+
+        // 4. ContestProblemScore 삭제 (문제별 점수)
+        for (ContestParticipant participant : participants) {
+            List<ContestProblemScore> scores = contestProblemScoreJpaRepo.findByParticipant_Id(participant.getId());
+            contestProblemScoreJpaRepo.deleteAll(scores);
+        }
+
+        // 5. ContestParticipant 삭제 (참가자)
+        contestParticipantJpaRepo.deleteAll(participants);
+
+        // 6. 각 문제의 테스트케이스와 ProblemHistory 삭제
+        for (Problem problem : problems) {
+            // 테스트케이스 삭제
             List<ProblemTestCase> testCases = problemTestCaseJpaRepo.findByProblem_ProblemId(problem.getProblemId());
             problemTestCaseJpaRepo.deleteAll(testCases);
 
-            // ProblemHistory도 삭제
+            // ProblemHistory 삭제
             problemHistoryJpaRepo.deleteAll(
                     problemHistoryJpaRepo.findAll().stream()
                             .filter(h -> h.getProblem().getProblemId().equals(problem.getProblemId()))
@@ -201,10 +190,19 @@ public class ContestUseCase {
             );
         }
 
-        // 6. 대회 문제들 삭제
+        // 7. 대회 문제들 삭제
         problemJpaRepo.deleteAll(problems);
 
-        // 7. 대회 삭제
+        // 8. Contest의 participantIds와 problemIds 비우기
+        if (contest.getParticipantIds() != null && !contest.getParticipantIds().isEmpty()) {
+            contest.getParticipantIds().clear();
+        }
+        if (contest.getProblemIds() != null && !contest.getProblemIds().isEmpty()) {
+            contest.getProblemIds().clear();
+        }
+        contestJpaRepo.saveAndFlush(contest);
+
+        // 9. 대회 삭제
         contestJpaRepo.delete(contest);
 
         return Response.ok("대회가 성공적으로 삭제되었습니다.");
@@ -292,15 +290,38 @@ public class ContestUseCase {
             throw new CustomException(ContestErrorCode.NOT_CONTEST_PROBLEM);
         }
 
-        // 대회의 문제 목록에서 제거
+        // 1. ContestSubmission 삭제 (학생들이 제출한 코드)
+        // CASCADE로 자동 삭제될 수 있지만, 명시적으로 처리
+
+        // 2. ContestProblemScore 삭제 (문제별 점수)
+        // 이 문제에 대한 모든 참가자의 점수 삭제
+        List<ContestParticipant> participants = contestParticipantJpaRepo
+                .findByContest_CodeOrderByTotalScoreDescTotalTimeSecondsAsc(code);
+
+        for (ContestParticipant participant : participants) {
+            contestProblemScoreJpaRepo.findByParticipant_IdAndProblem_ProblemId(
+                    participant.getId(), problemId
+            ).ifPresent(contestProblemScoreJpaRepo::delete);
+        }
+
+        // 3. ProblemHistory 삭제 (풀이 기록)
+        problemHistoryJpaRepo.deleteAll(
+                problemHistoryJpaRepo.findAll().stream()
+                        .filter(h -> h.getProblem().getProblemId().equals(problemId))
+                        .toList()
+        );
+
+        // 4. 대회의 문제 목록에서 제거
         List<Long> problemIds = contest.getProblemIds();
         if (problemIds != null) {
             problemIds.remove(problemId);
             contestJpaRepo.save(contest);
         }
 
-        // 문제 및 테스트 케이스 삭제
+        // 5. 테스트 케이스 삭제
         problemTestCaseJpaRepo.deleteAll(problemTestCaseJpaRepo.findByProblem_ProblemId(problemId));
+
+        // 6. 문제 삭제 (CASCADE로 ContestSubmission 자동 삭제됨)
         problemJpaRepo.delete(problem);
 
         return Response.ok("대회 문제가 성공적으로 삭제되었습니다.");

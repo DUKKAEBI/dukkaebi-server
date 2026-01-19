@@ -117,19 +117,21 @@ public class CourseUseCase {
         Course course = courseJpaRepo.findById(courseId)
                 .orElseThrow(() -> new CustomException(CourseErrorCode.COURSE_NOT_FOUND));
 
-        // 1. 참가자 목록 비우기 (외래키 제약 조건 해결)
-        if (course.getParticipantIds() != null) {
+        // 1. 참가자 목록 비우기 (tb_course_participant_ids)
+        if (course.getParticipantIds() != null && !course.getParticipantIds().isEmpty()) {
             course.getParticipantIds().clear();
-            courseJpaRepo.save(course);
         }
 
-        // 2. 문제 목록 비우기
-        if (course.getProblemIds() != null) {
+        // 2. 문제 목록 비우기 (tb_course_problem_ids)
+        // 문제 자체는 삭제되지 않고 코스와의 관계만 끊어짐
+        if (course.getProblemIds() != null && !course.getProblemIds().isEmpty()) {
             course.getProblemIds().clear();
-            courseJpaRepo.save(course);
         }
 
-        // 3. 코스 삭제 (문제들은 삭제되지 않음)
+        // 변경사항 저장 (외래키 관계 제거)
+        courseJpaRepo.saveAndFlush(course);
+
+        // 3. 코스 삭제
         courseJpaRepo.delete(course);
 
         return Response.ok("코스가 성공적으로 삭제되었습니다.");
