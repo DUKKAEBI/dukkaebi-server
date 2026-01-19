@@ -17,7 +17,8 @@ public record ProblemRes (
         Integer solvedCount,
         Double correctRate,
         SolvedResult solvedResult,
-        LocalDate addedAt
+        LocalDate addedAt,
+        Boolean isContestOnly  // true: 대회 전용 문제, false: 일반 문제를 가져온 것, null: 일반 문제 목록 조회 시
 ) {
     public static ProblemRes from(Problem problem, ProblemHistory history) {
         return new ProblemRes(
@@ -26,8 +27,10 @@ public record ProblemRes (
                 problem.getDifficulty(),
                 problem.getScore(),
                 problem.getSolvedCount(),
-                calculateCorrectRate(problem.getSolvedCount(), problem.getAttemptCount()),                getSolvedResult(history),
-                problem.getAddedAt()
+                calculateCorrectRate(problem.getSolvedCount(), problem.getAttemptCount()),
+                getSolvedResult(history),
+                problem.getAddedAt(),
+                null  // 일반 문제 목록 조회 시에는 null
         );
     }
 
@@ -40,7 +43,8 @@ public record ProblemRes (
                 problem.getSolvedCount(),
                 calculateCorrectRate(problem.getSolvedCount(), problem.getAttemptCount()),
                 getSolvedResult(history),
-                problem.getAddedAt()
+                problem.getAddedAt(),
+                problem.getContestId() != null  // contestId가 있으면 대회 전용 문제
         );
     }
 
