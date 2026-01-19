@@ -2,10 +2,12 @@ package com.ducami.dukkaebi.domain.contest.usecase;
 
 import com.ducami.dukkaebi.domain.contest.domain.Contest;
 import com.ducami.dukkaebi.domain.contest.domain.ContestParticipant;
+import com.ducami.dukkaebi.domain.contest.domain.ContestProblemMapping;
 import com.ducami.dukkaebi.domain.contest.domain.ContestProblemScore;
 import com.ducami.dukkaebi.domain.contest.domain.ContestSubmission;
 import com.ducami.dukkaebi.domain.contest.domain.repo.ContestJpaRepo;
 import com.ducami.dukkaebi.domain.contest.domain.repo.ContestParticipantJpaRepo;
+import com.ducami.dukkaebi.domain.contest.domain.repo.ContestProblemMappingJpaRepo;
 import com.ducami.dukkaebi.domain.contest.domain.repo.ContestProblemScoreJpaRepo;
 import com.ducami.dukkaebi.domain.contest.domain.repo.ContestSubmissionJpaRepo;
 import com.ducami.dukkaebi.domain.contest.error.ContestErrorCode;
@@ -18,7 +20,9 @@ import com.ducami.dukkaebi.domain.contest.presentation.dto.response.ContestSubmi
 import com.ducami.dukkaebi.domain.contest.presentation.dto.response.ContestUpdateEvent;
 import com.ducami.dukkaebi.domain.contest.service.ContestSseService;
 import com.ducami.dukkaebi.domain.contest.util.CodeGenerator;
+import com.ducami.dukkaebi.domain.problem.domain.enums.DifficultyType;
 import com.ducami.dukkaebi.domain.problem.error.ProblemErrorCode;
+import com.ducami.dukkaebi.domain.problem.presentation.dto.request.ProblemUpdateReq;
 import com.ducami.dukkaebi.domain.user.domain.User;
 import com.ducami.dukkaebi.global.common.dto.response.PageResponse;
 import com.ducami.dukkaebi.global.common.dto.response.Response;
@@ -51,6 +55,7 @@ public class ContestUseCase {
     private final ContestParticipantJpaRepo contestParticipantJpaRepo;
     private final ContestProblemScoreJpaRepo contestProblemScoreJpaRepo;
     private final ContestSubmissionJpaRepo contestSubmissionJpaRepo;
+    private final ContestProblemMappingJpaRepo contestProblemMappingJpaRepo;
     private final CodeGenerator codeGenerator;
     private final UserSessionHolder userSessionHolder;
     private final ProblemJpaRepo problemJpaRepo;
@@ -193,7 +198,7 @@ public class ContestUseCase {
         // 7. 대회 문제들 삭제
         problemJpaRepo.deleteAll(problems);
 
-        // 8. Contest의 participantIds와 problemIds 비우기
+        // 9. Contest의 participantIds와 problemIds 비우기
         if (contest.getParticipantIds() != null && !contest.getParticipantIds().isEmpty()) {
             contest.getParticipantIds().clear();
         }
@@ -202,7 +207,7 @@ public class ContestUseCase {
         }
         contestJpaRepo.saveAndFlush(contest);
 
-        // 9. 대회 삭제
+        // 10. 대회 삭제
         contestJpaRepo.delete(contest);
 
         return Response.ok("대회가 성공적으로 삭제되었습니다.");
@@ -276,9 +281,85 @@ public class ContestUseCase {
         return Response.created("대회 전용 문제가 성공적으로 생성되었습니다.");
     }
 
-    // 대회 문제 삭제
+    // 일반 문제들을 대회에 추가
     @Transactional
-    public Response deleteContestProblem(String code, Long problemId) {
+    public Response addExistingProblemsToContest(String code, List<Long> problemIds) {
+        Contest contest = contestJpaRepo.findById(code)
+                .orElseThrow(() -> new CustomException(ContestErrorCode.CONTEST_NOT_FOUND));
+
+        int addedCount = 0;
+        StringBuilder resultMessage = new StringBuilder();
+
+        for (Long problemId : problemIds) {
+            try {
+                Problem problem = problemJpaRepo.findById(problemId)
+                        .orElseThrow(() -> new CustomException(ProblemErrorCode.PROBLEM_NOT_FOUND));
+
+                // 일반 문제인지 확인 (contestId가 null이어야 함)
+                if (problem.getContestId() != null) {
+                    resultMessage.append("문제 ID ").append(problemId).append(": 대회 전용 문제는 추가할 수 없습니다.\n");
+                    continue;
+                }
+
+                // 이미 추가된 문제인지 확인
+                if (contestProblemMappingJpaRepo.findByContest_CodeAndProblem_ProblemId(code, problemId).isPresent()) {
+                    resultMessage.append("문제 ID ").append(problemId).append(": 이미 대회에 추가된 문제입니다.\n");
+                    continue;
+                }
+
+                // 난이도를 점수로 변환
+                Integer score = difficultyToScore(problem.getDifficulty());
+
+                // ContestProblemMapping 생성
+                ContestProblemMapping mapping = ContestProblemMapping.builder()
+                        .contest(contest)
+                        .problem(problem)
+                        .score(score)
+                        .build();
+                contestProblemMappingJpaRepo.save(mapping);
+
+                // Contest의 problemIds에 추가
+                List<Long> contestProblemIds = contest.getProblemIds();
+                if (contestProblemIds == null) {
+                    contestProblemIds = new ArrayList<>();
+                }
+                if (!contestProblemIds.contains(problemId)) {
+                    contestProblemIds.add(problemId);
+                }
+
+                addedCount++;
+                resultMessage.append("문제 ID ").append(problemId).append(": 성공 (점수: ").append(score).append("점)\n");
+
+            } catch (Exception e) {
+                resultMessage.append("문제 ID ").append(problemId).append(": 오류 - ").append(e.getMessage()).append("\n");
+            }
+        }
+
+        contestJpaRepo.save(contest);
+
+        return Response.created(addedCount + "개의 문제가 대회에 추가되었습니다.\n" + resultMessage.toString());
+    }
+
+    // 대회 문제 점수만 수정 (가져온 일반 문제용)
+    @Transactional
+    public Response updateContestProblemScore(String code, Long problemId, Integer score) {
+        Contest contest = contestJpaRepo.findById(code)
+                .orElseThrow(() -> new CustomException(ContestErrorCode.CONTEST_NOT_FOUND));
+
+        // ContestProblemMapping 조회
+        ContestProblemMapping mapping = contestProblemMappingJpaRepo
+                .findByContest_CodeAndProblem_ProblemId(code, problemId)
+                .orElseThrow(() -> new CustomException(ContestErrorCode.CONTEST_NOT_FOUND));
+
+        mapping.updateScore(score);
+        contestProblemMappingJpaRepo.save(mapping);
+
+        return Response.ok("문제 점수가 성공적으로 수정되었습니다. (새 점수: " + score + "점)");
+    }
+
+    // 대회 문제 수정
+    @Transactional
+    public Response updateContestProblem(String code, Long problemId, ProblemUpdateReq req) {
         Contest contest = contestJpaRepo.findById(code)
                 .orElseThrow(() -> new CustomException(ContestErrorCode.CONTEST_NOT_FOUND));
 
@@ -290,41 +371,103 @@ public class ContestUseCase {
             throw new CustomException(ContestErrorCode.NOT_CONTEST_PROBLEM);
         }
 
-        // 1. ContestSubmission 삭제 (학생들이 제출한 코드)
-        // CASCADE로 자동 삭제될 수 있지만, 명시적으로 처리
+        // 문제 정보 수정 (대회 문제는 difficulty는 null, score는 필수)
+        problem.updateContestProblem(req.name(), req.description(), req.input(), req.output(), req.score());
+        problemJpaRepo.save(problem);
 
-        // 2. ContestProblemScore 삭제 (문제별 점수)
-        // 이 문제에 대한 모든 참가자의 점수 삭제
-        List<ContestParticipant> participants = contestParticipantJpaRepo
-                .findByContest_CodeOrderByTotalScoreDescTotalTimeSecondsAsc(code);
+        // 기존 테스트 케이스 삭제
+        List<ProblemTestCase> existingTestCases = problemTestCaseJpaRepo.findByProblem_ProblemId(problemId);
+        problemTestCaseJpaRepo.deleteAll(existingTestCases);
 
-        for (ContestParticipant participant : participants) {
-            contestProblemScoreJpaRepo.findByParticipant_IdAndProblem_ProblemId(
-                    participant.getId(), problemId
-            ).ifPresent(contestProblemScoreJpaRepo::delete);
+        // 새로운 테스트 케이스 저장
+        if (req.testCases() != null && !req.testCases().isEmpty()) {
+            for (ProblemCreateReq.TestCaseReq tcReq : req.testCases()) {
+                ProblemTestCase testCase = ProblemTestCase.builder()
+                        .problem(problem)
+                        .input(tcReq.input())
+                        .output(tcReq.output())
+                        .build();
+                problemTestCaseJpaRepo.save(testCase);
+            }
         }
 
-        // 3. ProblemHistory 삭제 (풀이 기록)
-        problemHistoryJpaRepo.deleteAll(
-                problemHistoryJpaRepo.findAll().stream()
-                        .filter(h -> h.getProblem().getProblemId().equals(problemId))
-                        .toList()
-        );
+        return Response.ok("대회 문제가 성공적으로 수정되었습니다.");
+    }
 
-        // 4. 대회의 문제 목록에서 제거
-        List<Long> problemIds = contest.getProblemIds();
-        if (problemIds != null) {
-            problemIds.remove(problemId);
-            contestJpaRepo.save(contest);
+    // 대회 문제 삭제
+    @Transactional
+    public Response deleteContestProblem(String code, Long problemId) {
+        Contest contest = contestJpaRepo.findById(code)
+                .orElseThrow(() -> new CustomException(ContestErrorCode.CONTEST_NOT_FOUND));
+
+        Problem problem = problemJpaRepo.findById(problemId)
+                .orElseThrow(() -> new CustomException(ProblemErrorCode.PROBLEM_NOT_FOUND));
+
+        // 대회 전용 문제인지 확인
+        boolean isContestOnlyProblem = code.equals(problem.getContestId());
+
+        if (isContestOnlyProblem) {
+            // ===== 대회 전용 문제 (contestId != null) =====
+            // 문제 자체를 삭제
+
+            // 1. ContestProblemScore 삭제 (문제별 점수)
+            List<ContestParticipant> participants = contestParticipantJpaRepo
+                    .findByContest_CodeOrderByTotalScoreDescTotalTimeSecondsAsc(code);
+
+            for (ContestParticipant participant : participants) {
+                contestProblemScoreJpaRepo.findByParticipant_IdAndProblem_ProblemId(
+                        participant.getId(), problemId
+                ).ifPresent(contestProblemScoreJpaRepo::delete);
+            }
+
+            // 2. ProblemHistory 삭제 (풀이 기록)
+            problemHistoryJpaRepo.deleteAll(
+                    problemHistoryJpaRepo.findAll().stream()
+                            .filter(h -> h.getProblem().getProblemId().equals(problemId))
+                            .toList()
+            );
+
+            // 3. 대회의 문제 목록에서 제거
+            List<Long> problemIds = contest.getProblemIds();
+            if (problemIds != null) {
+                problemIds.remove(problemId);
+                contestJpaRepo.save(contest);
+            }
+
+            // 4. 테스트 케이스 삭제
+            problemTestCaseJpaRepo.deleteAll(problemTestCaseJpaRepo.findByProblem_ProblemId(problemId));
+
+            // 5. 문제 삭제 (CASCADE로 ContestSubmission 자동 삭제됨)
+            problemJpaRepo.delete(problem);
+
+            return Response.ok("대회 전용 문제가 성공적으로 삭제되었습니다.");
+
+        } else {
+            // ===== 가져온 일반 문제 (contestId == null) =====
+            // 문제는 삭제하지 않고 대회와의 관계만 끊기
+
+            // 1. ContestProblemMapping 삭제 (점수 매핑)
+            contestProblemMappingJpaRepo.deleteByContest_CodeAndProblem_ProblemId(code, problemId);
+
+            // 2. 대회의 문제 목록에서 제거
+            List<Long> problemIds = contest.getProblemIds();
+            if (problemIds != null) {
+                problemIds.remove(problemId);
+                contestJpaRepo.save(contest);
+            }
+
+            // 3. ContestProblemScore 삭제 (참가자들의 이 문제에 대한 점수)
+            List<ContestParticipant> participants = contestParticipantJpaRepo
+                    .findByContest_CodeOrderByTotalScoreDescTotalTimeSecondsAsc(code);
+
+            for (ContestParticipant participant : participants) {
+                contestProblemScoreJpaRepo.findByParticipant_IdAndProblem_ProblemId(
+                        participant.getId(), problemId
+                ).ifPresent(contestProblemScoreJpaRepo::delete);
+            }
+
+            return Response.ok("문제가 대회에서 제거되었습니다. (문제 자체는 삭제되지 않음)");
         }
-
-        // 5. 테스트 케이스 삭제
-        problemTestCaseJpaRepo.deleteAll(problemTestCaseJpaRepo.findByProblem_ProblemId(problemId));
-
-        // 6. 문제 삭제 (CASCADE로 ContestSubmission 자동 삭제됨)
-        problemJpaRepo.delete(problem);
-
-        return Response.ok("대회 문제가 성공적으로 삭제되었습니다.");
     }
 
     // 대회 종료
@@ -454,5 +597,16 @@ public class ContestUseCase {
         Integer minutes = (seconds % 3600) / 60;
         Integer secs = seconds % 60;
         return String.format("%02d:%02d:%02d", hours, minutes, secs);
+    }
+
+    private Integer difficultyToScore(DifficultyType difficulty) {
+        if (difficulty == null) return 0;
+        return switch (difficulty) {
+            case COPPER -> 1;   // 구리
+            case IRON -> 3;     // 철
+            case SILVER -> 5;   // 은
+            case GOLD -> 10;    // 금
+            case JADE -> 15;    // 옥
+        };
     }
 }

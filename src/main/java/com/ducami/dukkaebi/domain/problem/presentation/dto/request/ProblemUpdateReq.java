@@ -10,6 +10,7 @@ public record ProblemUpdateReq(
         String input,
         String output,
         DifficultyType difficulty,
+        Integer score,  // 대회 문제용 점수 (일반 문제는 null)
         List<ProblemCreateReq.TestCaseReq> testCases
 ) {
 }
