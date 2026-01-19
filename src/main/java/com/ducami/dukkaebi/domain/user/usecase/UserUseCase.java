@@ -27,6 +27,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+import static com.ducami.dukkaebi.domain.user.domain.enums.UserType.STUDENT;
+
 @Service
 @RequiredArgsConstructor
 public class UserUseCase {
@@ -45,7 +47,7 @@ public class UserUseCase {
 
     public PageResponse<UserListRes> getAllUsersPaged(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<UserListRes> userPage = userJpaRepo.findAll(pageable)
+        Page<UserListRes> userPage = userJpaRepo.findByRole(STUDENT, pageable)
                 .map(UserListRes::from);
         return PageResponse.of(userPage);
     }
@@ -69,7 +71,9 @@ public class UserUseCase {
     }
 
     public List<UserListRes> getFilteredUsers(String keyword, SortType sortType) {
-        List<User> users = userJpaRepo.findAll();
+        List<User> users = userJpaRepo.findAll().stream()
+                .filter(user -> user.getRole() == UserType.STUDENT)
+                .toList();
         return userFilterService.filterAndSortUsers(users, keyword, sortType).stream()
                 .map(UserListRes::from)
                 .toList();
