@@ -42,7 +42,14 @@ public record ProblemDetailRes(
                 : List.of();
 
         // isContestOnly 결정
-        Boolean isContestOnly = problem.getContestId() != null ? true : (contestScore != null ? false : null);
+        Boolean isContestOnly;
+        if (problem.getContestId() != null) {
+            isContestOnly = true;  // 대회 전용 문제
+        } else if (contestScore != null) {
+            isContestOnly = false;  // 일반 문제를 대회에 가져온 것
+        } else {
+            isContestOnly = null;  // 일반 문제
+        }
 
         return new ProblemDetailRes(
                 problem.getName(),
