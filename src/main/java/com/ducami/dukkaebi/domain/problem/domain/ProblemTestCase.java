@@ -19,9 +19,9 @@ public class ProblemTestCase {
     @JoinColumn(name = "problemId")
     private Problem problem;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String input;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String output;
 }
