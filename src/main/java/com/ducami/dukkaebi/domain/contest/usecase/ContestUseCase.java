@@ -20,6 +20,7 @@ import com.ducami.dukkaebi.domain.contest.presentation.dto.response.ContestSubmi
 import com.ducami.dukkaebi.domain.contest.presentation.dto.response.ContestUpdateEvent;
 import com.ducami.dukkaebi.domain.contest.service.ContestSseService;
 import com.ducami.dukkaebi.domain.contest.util.CodeGenerator;
+import com.ducami.dukkaebi.domain.grading.domain.repo.SavedCodeJpaRepo;
 import com.ducami.dukkaebi.domain.problem.domain.enums.DifficultyType;
 import com.ducami.dukkaebi.domain.problem.error.ProblemErrorCode;
 import com.ducami.dukkaebi.domain.problem.presentation.dto.request.ProblemUpdateReq;
@@ -61,6 +62,7 @@ public class ContestUseCase {
     private final ProblemJpaRepo problemJpaRepo;
     private final ProblemHistoryJpaRepo problemHistoryJpaRepo;
     private final ProblemTestCaseJpaRepo problemTestCaseJpaRepo;
+    private final SavedCodeJpaRepo savedCodeJpaRepo;
     private final ContestSseService contestSseService;
 
     private static final ZoneId ZONE = ZoneId.of("Asia/Seoul");
@@ -206,6 +208,9 @@ public class ContestUseCase {
                             .filter(h -> h.getProblem().getProblemId().equals(problem.getProblemId()))
                             .toList()
             );
+
+            // SavedCode 삭제 (대회 전용 문제에 저장된 코드)
+            savedCodeJpaRepo.deleteByProblem_ProblemId(problem.getProblemId());
         }
 
         // 8. 대회 전용 문제들만 삭제 (일반 문제는 삭제하지 않음)
@@ -454,7 +459,10 @@ public class ContestUseCase {
             // 4. 테스트 케이스 삭제
             problemTestCaseJpaRepo.deleteAll(problemTestCaseJpaRepo.findByProblem_ProblemId(problemId));
 
-            // 5. 문제 삭제 (CASCADE로 ContestSubmission 자동 삭제됨)
+            // 5. SavedCode 삭제 (저장된 코드)
+            savedCodeJpaRepo.deleteByProblem_ProblemId(problemId);
+
+            // 6. 문제 삭제 (CASCADE로 ContestSubmission 자동 삭제됨)
             problemJpaRepo.delete(problem);
 
             return Response.ok("대회 전용 문제가 성공적으로 삭제되었습니다.");

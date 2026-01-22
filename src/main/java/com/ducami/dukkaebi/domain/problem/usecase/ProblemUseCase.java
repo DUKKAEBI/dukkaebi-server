@@ -1,5 +1,6 @@
 package com.ducami.dukkaebi.domain.problem.usecase;
 
+import com.ducami.dukkaebi.domain.grading.domain.repo.SavedCodeJpaRepo;
 import com.ducami.dukkaebi.domain.problem.domain.Problem;
 import com.ducami.dukkaebi.domain.problem.domain.ProblemTestCase;
 import com.ducami.dukkaebi.domain.problem.domain.enums.DifficultyType;
@@ -33,6 +34,7 @@ public class ProblemUseCase {
     private final ProblemJpaRepo problemJpaRepo;
     private final ProblemTestCaseJpaRepo testCaseJpaRepo;
     private final ProblemHistoryJpaRepo problemHistoryJpaRepo;
+    private final SavedCodeJpaRepo savedCodeJpaRepo;
 
     public PageResponse<ProblemRes> getProblemPaged(int page, int size) {
         try {
@@ -140,7 +142,11 @@ public class ProblemUseCase {
                         .toList()
         );
 
-        // 3. 문제 삭제
+        // 3. SavedCode 삭제 (사용자들이 저장한 코드)
+        int deletedSavedCodes = savedCodeJpaRepo.deleteByProblem_ProblemId(problemId);
+        log.info("문제 삭제 - 저장된 코드 삭제 완료: {}건", deletedSavedCodes);
+
+        // 4. 문제 삭제
         problemJpaRepo.delete(problem);
 
         return Response.ok("문제가 성공적으로 삭제되었습니다.");
