@@ -192,12 +192,6 @@ Swagger UI: **`http://<host>:8080/swagger-ui/index.html`** — `auto-tag-classes
 | `GEMINI_API_KEY` | 챗봇용 Gemini 키 |
 | `GEMINI_GRADING_API_KEY` | 채점 보조용 Gemini 키 (챗봇과 분리) |
 
-고정값:
-- DB 드라이버: `org.mariadb.jdbc.Driver`
-- JPA: `ddl-auto: update`, `show-sql: true`
-- Gemini URL: `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent`
-- S3 리전: `ap-northeast-2`
-
 ## 8. 로컬 실행 방법
 
 ### 사전 준비
@@ -301,8 +295,3 @@ Python은 `python3` → `python` → `py` 순으로 자동 감지. C++는 `g++ -
 3. **테스트 커버리지** — 현재 `DukkaebiApplicationTests.contextLoads()` 외에 실질 테스트가 없습니다. 신규 기능에는 최소 usecase 단위 테스트 동반을 권장합니다.
 4. **SSE 타임아웃** — `spring.mvc.async.request-timeout: 1800000` (30분). 장시간 대회 구독 시 클라이언트에서 재연결 로직이 필요합니다.
 5. **`dump.rdb` 커밋 금지** — 과거 커밋 이력에 Redis 덤프 파일이 올라간 적이 있어 제거했습니다(`2463d80`). 로컬 Redis 파일이 워킹 디렉토리에 생기지 않도록 주의하세요.
-
----
-
-
-문서에서 빠진 것이 보이면 바로 갱신해주세요. 코드가 정답이고, 이 README는 지도입니다.
