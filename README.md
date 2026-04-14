@@ -41,7 +41,7 @@
 | 인증 | **JWT** (`jjwt 0.12.6`) — Access / Refresh 2종 |
 | 문서화 | **springdoc-openapi 2.7.0** (Swagger UI: `/swagger-ui/index.html`) |
 | 파일 저장 | **AWS S3** (`spring-cloud-starter-aws 2.2.6.RELEASE`) |
-| 외부 AI | **Google Gemini 2.0 Flash** (챗봇 + 채점 보조) |
+| 외부 AI | **Google Gemini 2.0 Flash** |
 | 복원력 | **Resilience4j** (Gemini 호출 RateLimiter + Retry) |
 | HTTP 클라이언트 | Apache HttpClient5 + RestTemplate |
 | 컨테이너 | Docker (base: `eclipse-temurin:21`, python3 + g++ 포함) |
