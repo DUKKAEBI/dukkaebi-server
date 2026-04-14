@@ -1,306 +1,322 @@
-# 두깨비(Dukkaebi) Server
+# Dukkaebi Server
 
-코딩 학습 플랫폼 **두깨비**의 백엔드 서버입니다. 학생은 문제를 풀며 점수를 쌓고 "도깨비 → 신깨비"로 성장하며, 강사는 코스·문제·대회를 만들어 학생을 관리합니다. 이 문서는 신규 합류자 / 인수인계를 위한 상세 안내서입니다.
+> **English** · [한국어](./README.ko.md)
 
----
-
-## 목차
-1. [서비스 개요](#1-서비스-개요)
-2. [기술 스택](#2-기술-스택)
-3. [프로젝트 구조](#3-프로젝트-구조)
-4. [도메인별 기능 요약](#4-도메인별-기능-요약)
-5. [인증 / 권한](#5-인증--권한)
-6. [API 라우팅 요약](#6-api-라우팅-요약)
-7. [환경 변수 & 설정](#7-환경-변수--설정)
-8. [로컬 실행 방법](#8-로컬-실행-방법)
-9. [빌드 & 배포 파이프라인](#9-빌드--배포-파이프라인)
-10. [채점 시스템 동작 원리](#10-채점-시스템-동작-원리)
-11. [외부 연동](#11-외부-연동)
-12. [운영 주의사항 / 알려진 이슈](#12-운영-주의사항--알려진-이슈)
+Backend server for **Dukkaebi**, a coding-learning platform. Students solve problems to earn points and level up through a series of "Dokkaebi" ranks, while instructors create courses, problems, and contests to manage their students. This document is a detailed guide for new joiners and hand-over.
 
 ---
 
-## 1. 서비스 개요
+## Table of Contents
+1. [Service Overview](#1-service-overview)
+2. [Tech Stack](#2-tech-stack)
+3. [Project Structure](#3-project-structure)
+4. [Domain Features](#4-domain-features)
+5. [Authentication / Authorization](#5-authentication--authorization)
+6. [API Routing Summary](#6-api-routing-summary)
+7. [Environment Variables & Configuration](#7-environment-variables--configuration)
+8. [Running Locally](#8-running-locally)
+9. [Build & Deployment Pipeline](#9-build--deployment-pipeline)
+10. [How the Grading System Works](#10-how-the-grading-system-works)
+11. [External Integrations](#11-external-integrations)
+12. [Operational Notes](#12-operational-notes)
 
-- **목적**: 코딩 학습용 웹 서비스. 학생은 문제를 풀고(제출·테스트·저장), 챗봇(두비)에게 질문하고, 코스에 참여하고, 대회(Contest)에 참가합니다. 관리자(강사)는 문제·코스·공지·대회·회원을 관리합니다.
-- **주요 컨셉**
-  - **성장 시스템**: 사용자 점수(score)에 따라 `WISP(도깨비불) → COPPER → IRON → SILVER → GOLD → JADE → GOD(신깨비)` 로 자동 승급 (`GrowthType.fromScore`).
-  - **문제 난이도**: `COPPER / IRON / SILVER / GOLD / JADE` — 난이도별로 정답 시 1 / 3 / 5 / 10 / 15점 부여.
-  - **코스 / 대회**: 강사가 문제를 묶어 배포. 대회는 참여코드(6자리) 기반, 실시간 순위는 SSE로 브로드캐스트.
-- **클라이언트**: 학생용 / 관리자용 웹이 별도 배포되며, 허용 오리진은 `SecurityConfig`에 정의되어 있습니다.
+---
 
-## 2. 기술 스택
+## 1. Service Overview
 
-| 분류 | 내용 |
+- **Purpose**: A coding-learning web service. Students solve, test, and save problem submissions, ask questions to a chatbot (Dubi), join courses, and participate in contests. Admins (instructors) manage problems, courses, notices, contests, and members.
+- **Core Concepts**
+  - **Growth system**: A user's `score` automatically promotes them through `WISP → COPPER → IRON → SILVER → GOLD → JADE → GOD` (see `GrowthType.fromScore`).
+  - **Problem difficulty**: `COPPER / IRON / SILVER / GOLD / JADE` — correct answers award 1 / 3 / 5 / 10 / 15 points respectively.
+  - **Courses / Contests**: Instructors bundle problems and publish them. Contests are keyed by a 6-character join code and broadcast the live leaderboard over SSE.
+- **Clients**: Separate student and admin web apps are deployed independently. Allowed origins are defined in `SecurityConfig`.
+
+## 2. Tech Stack
+
+| Category | Details |
 |---|---|
-| 언어 / 런타임 | **Java 21** (Temurin) |
-| 프레임워크 | **Spring Boot 3.5.7** (web, data-jpa, security, data-redis) |
-| 빌드 | Gradle (wrapper 포함) |
-| DB | **MariaDB** (runtime `mariadb-java-client`, MySQL 드라이버도 함께 포함) |
-| 캐시/세션 보조 | **Redis** (`spring-boot-starter-data-redis`) |
-| 인증 | **JWT** (`jjwt 0.12.6`) — Access / Refresh 2종 |
-| 문서화 | **springdoc-openapi 2.7.0** (Swagger UI: `/swagger-ui/index.html`) |
-| 파일 저장 | **AWS S3** (`spring-cloud-starter-aws 2.2.6.RELEASE`) |
-| 외부 AI | **Google Gemini 2.0 Flash** (챗봇 + 채점 보조) |
-| 복원력 | **Resilience4j** (Gemini 호출 RateLimiter + Retry) |
-| HTTP 클라이언트 | Apache HttpClient5 + RestTemplate |
-| 컨테이너 | Docker (base: `eclipse-temurin:21`, python3 + g++ 포함) |
-| CI/CD | GitHub Actions → DockerHub → EC2 SSH 배포 |
-| 실시간 | Spring MVC SSE (대회 순위 실시간 전송, 비동기 타임아웃 30분) |
+| Language / Runtime | **Java 21** (Temurin) |
+| Framework | **Spring Boot 3.5.7** (web, data-jpa, security, data-redis) |
+| Build | Gradle (wrapper included) |
+| Database | **MariaDB** (runtime `mariadb-java-client`; MySQL driver also bundled) |
+| Cache / Session aid | **Redis** (`spring-boot-starter-data-redis`) |
+| Auth | **JWT** (`jjwt 0.12.6`) — Access / Refresh tokens |
+| Docs | **springdoc-openapi 2.7.0** (Swagger UI: `/swagger-ui/index.html`) |
+| File storage | **AWS S3** (`spring-cloud-starter-aws 2.2.6.RELEASE`) |
+| External AI | **Google Gemini 2.0 Flash** (chatbot + grading assistance) |
+| Resilience | **Resilience4j** (RateLimiter + Retry for Gemini calls) |
+| HTTP client | Apache HttpClient5 + RestTemplate |
+| Container | Docker (base: `eclipse-temurin:21`, includes python3 + g++) |
+| CI/CD | GitHub Actions → DockerHub → remote host via SSH |
+| Realtime | Spring MVC SSE (live contest scoreboard; async timeout: 30 min) |
 
-## 3. 프로젝트 구조
+## 3. Project Structure
 
-도메인 주도 패키지 구성이며, 각 도메인은 `presentation / usecase / service / domain / error` 레이어로 나뉩니다.
+A domain-driven package layout. Each domain is split into `presentation / usecase / service / domain / error` layers.
 
 ```
 src/main/java/com/ducami/dukkaebi
-├── DukkaebiApplication.java           # 엔트리포인트
+├── DukkaebiApplication.java           # Entry point
 ├── domain/
-│   ├── auth/        # 회원가입, 로그인, 토큰 재발급
-│   ├── user/        # 사용자 정보, 활동(streak/contributions), 관리자 회원관리
-│   ├── problem/     # 문제 CRUD, 테스트케이스, 제출 히스토리
-│   ├── grading/     # 코드 채점(JudgeService) / 테스트 / 저장코드(SavedCode)
-│   ├── course/      # 코스 CRUD, 수강/진행상황
-│   ├── contest/     # 대회 CRUD, 참가, 제출, 실시간 순위(SSE)
-│   ├── chatbot/     # 두비 챗봇 (Gemini 래퍼 + 캐시)
-│   └── notice/      # 공지사항
+│   ├── auth/        # Sign-up, sign-in, token refresh
+│   ├── user/        # User info, activity (streak/contributions), admin member management
+│   ├── problem/     # Problem CRUD, test cases, submission history
+│   ├── grading/     # Code grading (JudgeService) / testing / SavedCode
+│   ├── course/      # Course CRUD, enrollment, progress
+│   ├── contest/     # Contest CRUD, participation, submissions, realtime leaderboard (SSE)
+│   ├── chatbot/     # Dubi chatbot (Gemini wrapper + cache)
+│   └── notice/      # Announcements
 └── global/
-    ├── common/      # 공통 응답(Response/ResponseData/PageResponse), S3Service
+    ├── common/      # Common responses (Response/ResponseData/PageResponse), S3Service
     ├── config/      # SpringConfig, SwaggerConfig, S3Config, RestTemplateConfig
     ├── exception/   # CustomException, ErrorCode, GlobalExceptionHandler
     └── security/
         ├── SecurityConfig.java
-        ├── auth/    # AuthDetails, UserSessionHolder (현재 로그인 사용자)
-        └── jwt/     # JwtFilter, JwtProvider, JwtExtractor, JwtTokenService 등
+        ├── auth/    # AuthDetails, UserSessionHolder (currently authenticated user)
+        └── jwt/     # JwtFilter, JwtProvider, JwtExtractor, JwtTokenService, etc.
 ```
 
-### 레이어 규약
-- **presentation/controller**: `@RestController`. 요청을 받아 `UseCase`로 위임.
-- **usecase**: 트랜잭션 경계. 여러 service/repo를 조합하여 API 한 건의 유스케이스를 완성.
-- **service**: 단일 책임 단위의 비즈니스 로직(예: `JudgeService`, `UserActivityService`, `GeminiService`).
-- **domain**: JPA 엔티티(`*.java`), `enums/`, `repo/` (JpaRepository 인터페이스).
-- **error**: 도메인별 `ErrorCode` (공통 `ErrorCode` 인터페이스 구현).
+### Layer conventions
+- **presentation/controller**: `@RestController`. Accepts requests and delegates to a `UseCase`.
+- **usecase**: Transaction boundary. Orchestrates services / repositories to fulfill a single API use case.
+- **service**: Single-responsibility business logic (e.g. `JudgeService`, `UserActivityService`, `GeminiService`).
+- **domain**: JPA entities, `enums/`, `repo/` (JpaRepository interfaces).
+- **error**: Per-domain `ErrorCode` implementations of the shared `ErrorCode` interface.
 
-> **신규 API 추가 시**: `Controller → UseCase → Service → Repo` 순서로 뼈대를 만들고, 요청/응답은 `presentation/dto/request`, `presentation/dto/response`에 record로 정의하는 것이 기존 관례입니다.
+> **When adding a new API**: build the skeleton in the order `Controller → UseCase → Service → Repo`, and define request/response types as `record`s inside `presentation/dto/request` and `presentation/dto/response`. That is the existing convention.
 
-## 4. 도메인별 기능 요약
+## 4. Domain Features
 
 ### auth
-회원가입(`/auth/sign-up`), 로그인(`/auth/sign-in`), 리프레시(`/auth/refresh`). 로그인 성공 시 Access / Refresh 토큰을 발급합니다. Refresh 토큰은 Redis에 저장되어 재발급 / 로그아웃 시 블랙리스트 처리됩니다.
+Sign-up (`/auth/sign-up`), sign-in (`/auth/sign-in`), and refresh (`/auth/refresh`). A successful sign-in issues both Access and Refresh tokens. Refresh tokens are stored in Redis so they can be reissued on refresh or blacklisted on logout.
 
 ### user
-- `/user` 본인 정보, `/user/list`, `/user/info/{userId}`, `/user/list/filter` (정렬/필터).
-- `/user/activity/contributions`, `/user/activity/streak` — GitHub 잔디 스타일의 일일 활동 / 연속 출석.
+- `/user` returns the caller's info. `/user/list`, `/user/info/{userId}`, and `/user/list/filter` expose listing / sorting / filtering.
+- `/user/activity/contributions`, `/user/activity/streak` — GitHub-style contribution heatmap and daily streak.
 - `/user/logout`, `/user/delete`.
-- `/admin/user/delete/{userId}` — 관리자 회원 삭제.
-- 성장(GrowthType)은 점수 변동 시 `User.addScore()` 내부에서 자동 갱신됩니다.
+- `/admin/user/delete/{userId}` for admin member removal.
+- `GrowthType` is recomputed automatically inside `User.addScore()` whenever the score changes.
 
 ### problem
-- 일반 문제 CRUD (`/admin/problems`), 일반 조회 (`/problems`, `/problems/filter`, `/problems/{id}`).
-- 엔티티: `Problem`, `ProblemTestCase`, `ProblemHistory` (사용자별 SOLVED / FAILED / NOT_SOLVED).
-- `Problem.contestId`가 null이 아니면 "대회 문제"로 취급되어 일반 점수는 부여되지 않고 대회 점수로만 집계됩니다.
+- Regular-problem CRUD at `/admin/problems`; read-only access at `/problems`, `/problems/filter`, `/problems/{id}`.
+- Entities: `Problem`, `ProblemTestCase`, `ProblemHistory` (per-user `SOLVED` / `FAILED` / `NOT_SOLVED`).
+- If `Problem.contestId` is non-null, the problem is treated as a "contest problem" — it does not award normal points and is only tallied toward contest scores.
 
 ### grading (`/solve`)
-코드 실행 엔진. 아래 [채점 시스템 동작 원리](#10-채점-시스템-동작-원리) 참고.
-- `POST /solve/grading` — 실제 제출 (점수/히스토리/통계 반영)
-- `POST /solve/test` — 테스트만 (부수효과 없음)
-- `POST /solve/save`, `GET /solve/saved/{problemId}` — 작성 중인 코드 저장/복원.
+The code execution engine. See [How the Grading System Works](#10-how-the-grading-system-works) below.
+- `POST /solve/grading` — real submission (affects score / history / statistics)
+- `POST /solve/test` — dry run (no side effects)
+- `POST /solve/save`, `GET /solve/saved/{problemId}` — save and restore work-in-progress code.
 
 ### course
-- 강사(`/admin/course`): 코스 생성/수정/삭제, 코스 ↔ 문제 매핑 추가/삭제.
-- 공통(`/course`): 코스 목록/상세/검색.
-- 학생(`/student/course`): 코스 참여, 진행 중 / 완료 / 참여 가능 코스 조회.
-- `CourseProgressService`가 사용자별 진행률을 계산.
+- Admin (`/admin/course`): create / update / delete courses, add and remove course-problem mappings.
+- Shared (`/course`): list, detail, search.
+- Student (`/student/course`): join a course, list in-progress / completed / joinable courses.
+- `CourseProgressService` computes per-user progress.
 
 ### contest
-참여 코드 기반 대회. 6자리 랜덤 코드는 `CodeGenerator`가 생성합니다.
-- `/admin/contest`: 대회 생성/수정/종료, 문제 추가(기존 문제 import or 대회 전용 문제 생성), 개별 문제 배점/순서/삭제, 참여자 조회, 수동 점수 보정, 개인 제출물 조회.
-- `/contest`: 대회 목록/상세/검색.
-- `/student/contest/{code}/join`: 참여.
-- `/contest/{code}/subscribe` (SSE): 실시간 스코어보드. 제출이 집계될 때마다 `ContestSseService`가 `ContestUpdateEvent`를 브로드캐스트합니다. `application.yml`의 `spring.mvc.async.request-timeout: 1800000` (30분)이 SSE 타임아웃입니다.
-- 채점 시 `Problem.contestId`가 존재하면 `JudgeService`가 `ContestParticipant.totalScore / totalTime`을 재계산하고 `ContestSubmission`(최신 제출 코드)을 갱신합니다.
+Join-code-based contests. The 6-character random code is generated by `CodeGenerator`.
+- `/admin/contest`: create / update / end contests; add problems (import existing or create contest-only ones); adjust per-problem score, order, deletion; list participants; manual score correction; fetch individual submissions.
+- `/contest`: list, detail, search.
+- `/student/contest/{code}/join`: participation.
+- `/contest/{code}/subscribe` (SSE): realtime scoreboard. Whenever a submission is tallied, `ContestSseService` broadcasts a `ContestUpdateEvent`. The SSE timeout is controlled by `spring.mvc.async.request-timeout: 1800000` (30 min) in `application.yml`.
+- On grading, if the problem has a `contestId`, `JudgeService` recomputes `ContestParticipant.totalScore / totalTime` and upserts `ContestSubmission` (latest submitted code).
 
 ### chatbot (`/chatbot/chat`)
-- `GeminiService`가 Gemini API(`gemini-2.0-flash:generateContent`)를 호출.
-- Resilience4j: 초당 3회 RateLimiter + 최대 3회 Retry(지수 백오프, `HttpClientErrorException.TooManyRequests`).
-- 동일 질문 중복 호출 방지를 위한 **5초 TTL 메모리 캐시**.
-- 시스템 프롬프트: 챗봇 이름 "두비", 존댓말 강제, 코딩 외 질문 거절 등.
+- `GeminiService` wraps the Gemini API (`gemini-2.0-flash:generateContent`).
+- Resilience4j: 3 requests-per-second RateLimiter + up to 3 Retries with exponential backoff (triggered on `HttpClientErrorException.TooManyRequests`).
+- A **5-second TTL in-memory cache** deduplicates identical questions.
+- System prompt: the chatbot's name is "Dubi", it always speaks in polite Korean, and it refuses non-coding questions.
 
 ### notice
-- `/notice`, `/notice/home`, `/notice/{id}`, `/notice/search` — 조회.
-- `/admin/notice/create|update|delete`, `/admin/notice/upload-file` — 관리자 전용. multipart 업로드 → S3 저장.
+- `/notice`, `/notice/home`, `/notice/{id}`, `/notice/search` — read-only.
+- `/admin/notice/create|update|delete`, `/admin/notice/upload-file` — admin only. Multipart uploads go to S3.
 
-## 5. 인증 / 권한
+## 5. Authentication / Authorization
 
-- `JwtFilter`가 `Authorization: Bearer <token>` 헤더에서 Access 토큰을 파싱해 `SecurityContext`에 올립니다.
-- 현재 로그인 사용자는 `UserSessionHolder.getUser()`로 어디서든 조회 가능 (서비스 계층에서 주로 사용).
-- **역할**: `UserType` 기준 `ROLE_ADMIN`, `ROLE_STUDENT`.
-- **Spring Security 경로 규칙** (`SecurityConfig`):
+- `JwtFilter` reads the Access token from `Authorization: Bearer <token>` and populates the `SecurityContext`.
+- The currently authenticated user can be fetched from anywhere via `UserSessionHolder.getUser()` (used mainly in the service layer).
+- **Roles**: `ROLE_ADMIN` and `ROLE_STUDENT`, both derived from `UserType`.
+- **Spring Security path rules** (`SecurityConfig`):
   ```
   /auth/**              permitAll
   /admin/**             hasRole("ADMIN")
   /student/**           hasRole("STUDENT")
   /user, /chatbot, /grading, /problems, /course, /contest, /notice  authenticated
   /swagger-ui/**, /v3/api-docs/**  permitAll
-  나머지                permitAll
+  others                permitAll
   ```
-- 세션은 STATELESS, CSRF / formLogin / logout 전부 disable.
-- 인증 실패 → `HttpStatusEntryPoint(401)`, 권한 부족 → `JwtAccessDeniedHandler(403)`.
+- Sessions are STATELESS; CSRF / formLogin / logout are all disabled.
+- On authentication failure → `HttpStatusEntryPoint(401)`; on authorization failure → `JwtAccessDeniedHandler(403)`.
 
-### 토큰 정책 (`application.yml`)
-- Access / Refresh 만료 시간은 `application.yml`의 `jwt.accessExp` / `jwt.refreshExp` 값을 참조.
-- `jwt.secretKey`는 환경변수 `SECRET_KEY`에서 주입.
+### Token policy (`application.yml`)
+- Access and Refresh expirations live in `jwt.accessExp` / `jwt.refreshExp`.
+- `jwt.secretKey` is injected from the `SECRET_KEY` environment variable.
 
-## 6. API 라우팅 요약
+## 6. API Routing Summary
 
-루트 prefix 기준(실제 파라미터/본문은 Swagger 참조).
+Grouped by root prefix (see Swagger for request/response details).
 
-| Prefix | Controller | 비고 |
+| Prefix | Controller | Notes |
 |---|---|---|
-| `/auth` | `AuthController` | 회원가입, 로그인, 리프레시 |
-| `/user`, `/user/activity` | `UserController`, `UserActivityController` | 본인 정보, 활동, 목록 |
-| `/admin/user` | `UserAdminController` | 관리자 회원 삭제 |
-| `/problems` | `ProblemController` | 문제 조회/검색/필터 |
-| `/admin/problems` | `ProblemAdminController` | 문제 CRUD |
-| `/solve` | `JudgeController` | 채점 / 테스트 / 저장코드 |
-| `/course` | `CourseController` | 코스 조회/검색 |
-| `/student/course` | `CourseStudentController` | 참여 / 진행 / 완료 / 참여가능 |
-| `/admin/course` | `CourseAdminController` | 코스 CRUD, 문제 매핑 |
-| `/contest` | `ContestController`, `ContestSseController` | 조회 + SSE 구독 |
-| `/student/contest` | `ContestStudentController` | 참가 |
-| `/admin/contest` | `ContestAdminController` | 대회/문제/배점/참여자 관리 |
-| `/notice` | `NoticeController` | 공지 조회 |
-| `/admin/notice` | `NoticeAdminController` | 공지 CRUD, 파일 업로드 |
-| `/chatbot/chat` | `ChatbotController` | Gemini 챗봇 |
+| `/auth` | `AuthController` | Sign-up, sign-in, refresh |
+| `/user`, `/user/activity` | `UserController`, `UserActivityController` | Self info, activity, listing |
+| `/admin/user` | `UserAdminController` | Admin member deletion |
+| `/problems` | `ProblemController` | Problem list / search / filter |
+| `/admin/problems` | `ProblemAdminController` | Problem CRUD |
+| `/solve` | `JudgeController` | Grading / testing / saved code |
+| `/course` | `CourseController` | Course list / search |
+| `/student/course` | `CourseStudentController` | Join / in-progress / completed / joinable |
+| `/admin/course` | `CourseAdminController` | Course CRUD, problem mapping |
+| `/contest` | `ContestController`, `ContestSseController` | Read + SSE subscription |
+| `/student/contest` | `ContestStudentController` | Join |
+| `/admin/contest` | `ContestAdminController` | Contest / problem / scoring / participant management |
+| `/notice` | `NoticeController` | Notice read |
+| `/admin/notice` | `NoticeAdminController` | Notice CRUD, file upload |
+| `/chatbot/chat` | `ChatbotController` | Gemini chatbot |
 
-Swagger UI: **`http://<host>:8080/swagger-ui/index.html`** — `auto-tag-classes: true`, tag/operation 알파벳 정렬.
+Swagger UI: **`http://<host>:8080/swagger-ui/index.html`** — with `auto-tag-classes: true` and alphabetical sorting of tags/operations.
 
-## 7. 환경 변수 & 설정
+## 7. Environment Variables & Configuration
 
-`src/main/resources/application.yml`은 **Git에 커밋되지 않습니다** (`.gitignore`에 `application.yml`, `application-*.yml` 등록). 로컬/서버 실행 전 다음 환경변수를 주입하거나 로컬 `application.yml`을 복원해야 합니다.
+`src/main/resources/application.yml` is **not committed to git** (`application.yml`, `application-*.yml` are in `.gitignore`). Before running locally or in production, you need to inject these environment variables or restore a local `application.yml`.
 
-| 키 | 설명 |
+| Key | Description |
 |---|---|
-| `DB_URL` | JDBC URL (예: `jdbc:mariadb://host:3306/dukkaebi`) |
-| `DB_USER` / `DB_PW` | DB 접속 정보 |
+| `DB_URL` | JDBC URL (e.g. `jdbc:mariadb://host:3306/dukkaebi`) |
+| `DB_USER` / `DB_PW` | Database credentials |
 | `REDIS_HOST` / `REDIS_PORT` | Redis |
-| `SECRET_KEY` | JWT 서명 키 (충분히 긴 랜덤 문자열) |
-| `BUCKET_NAME` | S3 버킷 |
-| `AWS_ACCESS_KEY` / `AWS_SECRET_KEY` | S3 IAM 자격 증명 |
-| `GEMINI_API_KEY` | 챗봇용 Gemini 키 |
-| `GEMINI_GRADING_API_KEY` | 채점 보조용 Gemini 키 (챗봇과 분리) |
+| `SECRET_KEY` | JWT signing key (a sufficiently long random string) |
+| `BUCKET_NAME` | S3 bucket |
+| `AWS_ACCESS_KEY` / `AWS_SECRET_KEY` | S3 IAM credentials |
+| `GEMINI_API_KEY` | Chatbot Gemini key |
+| `GEMINI_GRADING_API_KEY` | Grading-assistance Gemini key (separate from the chatbot key) |
 
-고정값:
-- DB 드라이버: `org.mariadb.jdbc.Driver`
+Fixed values:
+- DB driver: `org.mariadb.jdbc.Driver`
 - JPA: `ddl-auto: update`, `show-sql: true`
 - Gemini URL: `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent`
-- S3 리전: `ap-northeast-2`
+- S3 region: `ap-northeast-2`
 
-## 8. 로컬 실행 방법
+## 8. Running Locally
 
-### 사전 준비
-1. **JDK 21** 설치 (`java -version`)
-2. **MariaDB** 실행 (로컬 or Docker). 스키마는 빈 DB면 됩니다(`ddl-auto: update`가 자동 생성).
-3. **Redis** 실행 (기본 `localhost:6379`)
-4. **Python3 / g++** — 로컬에서 채점(`/solve/test`, `/solve/grading`)을 테스트할 계획이면 필요합니다 (`CodeExecutor`가 시스템 `javac` / `python3` / `g++`을 직접 실행).
-5. `src/main/resources/application.yml`을 생성하고 위의 환경변수를 채우기. (이 파일은 gitignore 대상이니 팀에서 공유되는 secret 문서 참고)
+### Prerequisites
+1. **JDK 21** installed (`java -version`).
+2. **MariaDB** running locally or in Docker. An empty database works — `ddl-auto: update` will create the schema.
+3. **Redis** running (defaults to `localhost:6379`).
+4. **Python3 / g++** — needed only if you plan to exercise `/solve/test` or `/solve/grading` locally, since `CodeExecutor` invokes the system's `javac` / `python3` / `g++` directly.
+5. Create `src/main/resources/application.yml` and fill in the environment values above. (This file is gitignored, so request the shared secrets from the team.)
 
-### 실행
+### Run
 ```bash
 ./gradlew bootRun
-# 또는
+# or
 ./gradlew clean build
 java -jar build/libs/dukkaebi-0.0.1-SNAPSHOT.jar
 ```
 
-기본 포트는 `8080` (Spring 기본값, 별도 설정 없음).
+The default port is `8080` (Spring default; not explicitly configured).
 
-### 테스트
+### Test
 ```bash
 ./gradlew test
 ```
-(현재는 `DukkaebiApplicationTests.contextLoads()` 하나만 있어 실질적인 테스트 커버리지는 없습니다.)
+(Only `DukkaebiApplicationTests.contextLoads()` exists today, so actual coverage is effectively zero.)
 
-## 9. 빌드 & 배포 파이프라인
+## 9. Build & Deployment Pipeline
 
-**`.github/workflows/dukkaebi-github-actions.yml`** — `main` 브랜치 push/PR 트리거.
+**`.github/workflows/dukkaebi-github-actions.yml`** — triggered by `push` / `pull_request` to `main`.
 
-1. **체크아웃 + JDK 21 세팅.**
-2. `microsoft/variable-substitution@v1` 로 `application.yml`의 플레이스홀더를 GitHub Secrets로 치환.
-3. Gradle 빌드 — push는 `bootJar -x test`, PR은 `build` (테스트 포함).
-4. `if: push` — Docker 이미지 빌드 후 DockerHub 푸시.
-5. `appleboy/ssh-action`으로 배포 호스트에 접속해 기존 컨테이너를 교체 실행합니다. (상세 스크립트는 워크플로 파일 참조)
+1. Checkout and set up **JDK 21**.
+2. Substitute `application.yml` placeholders with GitHub Secrets via `microsoft/variable-substitution@v1`.
+3. Gradle build — `push` uses `bootJar -x test`, PRs run `build` (with tests).
+4. `if: push` — build the Docker image and push to DockerHub.
+5. `appleboy/ssh-action` connects to the deployment host and replaces the running container. (See the workflow file for the exact script.)
 
-### 필요한 GitHub Secrets
+### Required GitHub Secrets
 `DB_URL`, `DB_USER`, `DB_PW`, `REDIS_HOST`, `REDIS_PORT`, `SECRET_KEY`,
 `GEMINI_API_KEY`, `GEMINI_GRADING_API_KEY`,
 `BUCKET_NAME`, `AWS_ACCESS_KEY`, `AWS_SECRET_KEY`,
 `DOCKER_USERNAME`, `DOCKER_PASSWORD`,
 `EC2_HOST`, `EC2_USERNAME`, `EC2_KEY`, `EC2_PORT`
 
-### Dockerfile 요점
-- Base: `eclipse-temurin:21`
-- `python3`, `python3-pip`, `g++`, `build-essential` 설치 → **컨테이너 내부에서 Python/C++ 코드 채점이 가능**.
-- 엔트리포인트: `java -jar -Dspring.profiles.active=prod app.jar`
+### Dockerfile highlights
+- Base: `eclipse-temurin:21`.
+- Installs `python3`, `python3-pip`, `g++`, `build-essential` — so **Python / C++ grading runs inside the container**.
+- Entry point: `java -jar -Dspring.profiles.active=prod app.jar`.
 
-## 10. 채점 시스템 동작 원리
+## 10. How the Grading System Works
 
-핵심 클래스:
-- `domain/grading/util/CodeExecutor.java` — 언어별 실행기
-- `domain/grading/service/JudgeService.java` — 채점 & 점수 집계
+Key classes:
+- `domain/grading/util/CodeExecutor.java` — per-language runner
+- `domain/grading/service/JudgeService.java` — grading & score aggregation
 
-### 지원 언어
-`java`, `python` / `python3`, `cpp` / `c++`. (그 외 언어 전달 시 `"지원하지 않는 언어입니다"` 리턴)
+### Supported languages
+`java`, `python` / `python3`, `cpp` / `c++`. Anything else returns `"unsupported language"`.
 
-### 실행 절차 (Java 예시)
-1. `System.getProperty("java.io.tmpdir")` 아래 임시 디렉토리 생성.
-2. `Main.java` 에 사용자 코드 기록 (이스케이프 시퀀스 `\n`, `\t` 등을 실제 문자로 `normalizeCode` 변환).
-3. `javac -encoding UTF-8 Main.java` 로 컴파일 — 10초 타임아웃, 실패 시 stderr를 `컴파일 에러:` 로 래핑 반환.
-4. `java -cp <tempDir> Main` 실행. 테스트케이스의 `input`을 stdin으로 주입.
-5. 실행 타임아웃(기본 **5초**) 초과 시 `destroyForcibly()` + `TIME_LIMIT_EXCEEDED`.
-6. stdout / stderr를 읽고 `finally`에서 임시 디렉토리 삭제.
+### Execution flow (Java example)
+1. Create a temp directory under `System.getProperty("java.io.tmpdir")`.
+2. Write the user's source into `Main.java`, normalizing escape sequences (`\n`, `\t`, …) into real characters via `normalizeCode`.
+3. Compile with `javac -encoding UTF-8 Main.java` — 10s timeout; on failure, stderr is wrapped as `"컴파일 에러: …"` and returned.
+4. Run `java -cp <tempDir> Main`, piping the test case's `input` into stdin.
+5. If the execution times out (default **5s**), the process is `destroyForcibly()`-ed and the result becomes `TIME_LIMIT_EXCEEDED`.
+6. Read stdout / stderr and clean up the temp directory in `finally`.
 
-Python은 `python3` → `python` → `py` 순으로 자동 감지. C++는 `g++ -std=c++17`로 컴파일 후 실행.
+Python auto-detects `python3` → `python` → `py`. C++ is compiled via `g++ -std=c++17` and then executed.
 
-### 채점 흐름 (`judgeCode`)
-1. `Problem` + `List<ProblemTestCase>` 로드 (테스트케이스 없으면 예외).
-2. 테스트케이스를 **순차 실행**. 첫 번째 오답 / 런타임 에러 / TLE 발생 시 **즉시 중단 (백준 스타일)**.
-3. 출력 비교는 `normalizeOutput` — `trim`, CRLF→LF, 끝 공백 제거.
-4. 상태 집계 → `JudgeStatus` (`ACCEPTED` / `WRONG_ANSWER` / `RUNTIME_ERROR` / `TIME_LIMIT_EXCEEDED`).
-5. **정답 & 일반 문제** (`contestId == null`)인 경우:
-   - 난이도별 점수(`difficultyToScore`) 부여 → `User.addScore()` → GrowthType 자동 갱신.
-   - `UserActivityService.increaseTodaySolvedCount(1)` — 일일 활동 +1 (streak용).
-6. `Problem.attemptCount += 1`, 정답이면 `solvedCount += 1` 업데이트.
-7. `ProblemHistory` upsert — 사용자별 `SOLVED` / `FAILED` 기록.
-8. **대회 문제**(`contestId != null`)이면:
-   - `ContestParticipant`의 `totalScore`, `totalTime`을 **모든 문제 점수 재합산하여** 갱신 (부분 점수/시간 보정 가능).
-   - `ContestSubmission`을 최신 코드로 업데이트(없으면 신규).
-9. `JudgeResultRes` 반환 — 상태, `passedCount/total`, 총 실행시간, 에러 메시지, 케이스별 결과.
+### Grading flow (`judgeCode`)
+1. Load the `Problem` and its `List<ProblemTestCase>` (throws if no test cases exist).
+2. Run test cases **sequentially**. Stops immediately on the first wrong answer / runtime error / TLE (Baekjoon style).
+3. Output comparison uses `normalizeOutput`: `trim`, CRLF → LF, trailing whitespace removed.
+4. Status is aggregated into a `JudgeStatus` (`ACCEPTED` / `WRONG_ANSWER` / `RUNTIME_ERROR` / `TIME_LIMIT_EXCEEDED`).
+5. **If accepted AND it is a regular problem** (`contestId == null`):
+   - Award difficulty-based points (`difficultyToScore`) via `User.addScore()`, which also recomputes `GrowthType`.
+   - Call `UserActivityService.increaseTodaySolvedCount(1)` to bump the daily activity counter (used by the streak feature).
+6. Update `Problem.attemptCount += 1`, and `solvedCount += 1` if accepted.
+7. Upsert `ProblemHistory` for the user with `SOLVED` / `FAILED`.
+8. **If it is a contest problem** (`contestId != null`):
+   - Recompute `ContestParticipant.totalScore` and `totalTime` by re-summing all of the participant's problem scores (so manual score/time corrections are supported).
+   - Upsert `ContestSubmission` with the latest code.
+9. Return `JudgeResultRes` — status, `passedCount/total`, total execution time, error message, and per-case results.
 
-### `testCode` 와의 차이
-`testCode`는 **부수효과 없음**. 점수/히스토리/통계/대회집계 전부 스킵하고 결과만 돌려줍니다.
+### Difference from `testCode`
+`testCode` has **no side effects**. It skips score, history, statistics, and contest aggregation, and only returns the result.
 
+> The code-execution isolation / resource-limit policy is documented in a separate internal handover note. Any hardening must precede opening this service up to untrusted users.
 
-## 11. 외부 연동
+## 11. External Integrations
 
-| 시스템 | 용도 | 관련 코드 |
+| System | Purpose | Relevant code |
 |---|---|---|
-| **MariaDB** | 영속 저장소. JPA + `ddl-auto: update`로 스키마 자동 관리. | `application.yml`, 각 도메인 `*JpaRepo` |
-| **Redis** | Refresh 토큰, 챗봇 캐시/레이트리밋 상태 등 | `JwtTokenService`, `spring-data-redis` |
-| **AWS S3** | 공지 첨부파일, 대회 이미지 업로드 | `global/common/service/S3Service.java`, `S3Config` |
-| **Gemini 2.0 Flash** | 챗봇 응답 생성 (`GEMINI_API_KEY`) + 채점/해설 보조 (`GEMINI_GRADING_API_KEY`) | `GeminiService` |
-| **DockerHub** | CI에서 이미지 푸시 | GitHub Actions |
-| **EC2** | 운영 호스트. SSH 배포. | GitHub Actions 마지막 스텝 |
+| **MariaDB** | Primary store. JPA + `ddl-auto: update` manages the schema. | `application.yml`, each domain's `*JpaRepo` |
+| **Redis** | Refresh tokens, chatbot cache / rate-limit state, etc. | `JwtTokenService`, `spring-data-redis` |
+| **AWS S3** | Notice attachments, contest image uploads. | `global/common/service/S3Service.java`, `S3Config` |
+| **Gemini 2.0 Flash** | Chatbot responses (`GEMINI_API_KEY`) + grading/explanation assistance (`GEMINI_GRADING_API_KEY`). | `GeminiService` |
+| **DockerHub** | CI pushes container images here. | GitHub Actions |
+| **Deploy host** | Runtime environment. Deployed via SSH. | GitHub Actions final step |
 
-## 12. 운영 주의사항
+## 12. Operational Notes
 
-1. **DB 스키마 관리** — JPA `ddl-auto: update`를 사용합니다. 엔티티 변경이 스키마에 영향을 주므로 엔티티 관련 PR은 리뷰를 엄격히 하고, 장기적으로 마이그레이션 툴(Flyway/Liquibase) 도입을 고려하세요.
-2. **`application.yml` 비커밋 정책** — 로컬 설정은 secret 공유 절차(Notion/1Password 등)를 통해 전달받아야 합니다. git에 커밋하지 말 것.
-3. **테스트 커버리지** — 현재 `DukkaebiApplicationTests.contextLoads()` 외에 실질 테스트가 없습니다. 신규 기능에는 최소 usecase 단위 테스트 동반을 권장합니다.
-4. **SSE 타임아웃** — `spring.mvc.async.request-timeout: 1800000` (30분). 장시간 대회 구독 시 클라이언트에서 재연결 로직이 필요합니다.
-5. **`dump.rdb` 커밋 금지** — 과거 커밋 이력에 Redis 덤프 파일이 올라간 적이 있어 제거했습니다(`2463d80`). 로컬 Redis 파일이 워킹 디렉토리에 생기지 않도록 주의하세요.
+> Sensitive production details, infra topology, and incident-response checklists live in a **private hand-over document**. This section only contains general notes a developer reading this repo should know.
+
+1. **Schema management** — JPA `ddl-auto: update` is in use. Entity changes affect the live schema, so entity-related PRs need strict review. Long-term, adopting a migration tool (Flyway/Liquibase) is recommended.
+2. **Do not commit `application.yml`** — local settings are exchanged out-of-band (Notion / 1Password / etc.).
+3. **Test coverage** — nothing meaningful beyond `DukkaebiApplicationTests.contextLoads()`. New features should ship with at least use-case-level tests.
+4. **SSE timeout** — `spring.mvc.async.request-timeout: 1800000` (30 min). Long-running contest subscriptions need reconnect logic on the client.
+5. **Do not commit `dump.rdb`** — a Redis dump file was accidentally committed in the past and later removed (`2463d80`). Keep local Redis dumps out of the working tree.
 
 ---
 
+## Hand-over Checklist
 
-문서에서 빠진 것이 보이면 바로 갱신해주세요. 코드가 정답이고, 이 README는 지도입니다.
+- [ ] JDK 21 installed and `./gradlew bootRun` works locally
+- [ ] Access to MariaDB / Redis (local or shared dev) with credentials in hand
+- [ ] `application.yml` secrets received and placed
+- [ ] Main APIs verified via Swagger UI (`/swagger-ui/index.html`)
+- [ ] Access to GitHub Secrets (CI/CD) for rollback / edits
+- [ ] DockerHub and deployment host SSH access
+- [ ] Access to the AWS S3 bucket / IAM policy
+- [ ] Access to the Gemini API console (so keys can be rotated)
+- [ ] Confirmed the production MariaDB backup policy (not yet documented — verify separately if needed)
+
+If anything here drifts, update it right away. The code is the source of truth; this README is only the map.
