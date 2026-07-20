@@ -24,6 +24,15 @@ jwt:
   refreshExp: 604800000 # 1week
   accessExp: 6000000 # 2hour
 
+server:
+  domain: ${SERVER_DOMAIN:http://localhost:8080}
+
+storage:
+  provider: ${STORAGE_PROVIDER:local}
+  local:
+    root-path: ${STORAGE_LOCAL_ROOT_PATH:./data/uploads}
+    public-base-path: ${STORAGE_LOCAL_PUBLIC_BASE_PATH:/files}
+
 cloud:
   aws:
     s3:

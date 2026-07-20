@@ -4,7 +4,7 @@ import com.ducami.dukkaebi.domain.notice.presentation.dto.request.NoticeReq;
 import com.ducami.dukkaebi.domain.notice.usecase.NoticeUseCase;
 import com.ducami.dukkaebi.global.common.dto.response.Response;
 import com.ducami.dukkaebi.global.common.dto.response.ResponseData;
-import com.ducami.dukkaebi.global.common.service.S3Service;
+import com.ducami.dukkaebi.global.common.service.StorageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -18,12 +18,12 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/admin/notice")
 public class NoticeAdminController {
     private final NoticeUseCase noticeUseCase;
-    private final S3Service s3Service;
+    private final StorageService storageService;
 
     @PostMapping(value = "/upload-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "공지사항 첨부파일 업로드")
     public ResponseData<String> uploadFile(@RequestPart("file") MultipartFile file) {
-        String fileUrl = s3Service.uploadFile(file, "notice");
+        String fileUrl = storageService.uploadFile(file, "notice");
         return ResponseData.created("파일이 성공적으로 업로드되었습니다.", fileUrl);
     }
 

@@ -11,7 +11,7 @@ import com.ducami.dukkaebi.domain.problem.presentation.dto.request.ProblemCreate
 import com.ducami.dukkaebi.domain.problem.presentation.dto.request.ProblemUpdateReq;
 import com.ducami.dukkaebi.global.common.dto.response.Response;
 import com.ducami.dukkaebi.global.common.dto.response.ResponseData;
-import com.ducami.dukkaebi.global.common.service.S3Service;
+import com.ducami.dukkaebi.global.common.service.StorageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -27,12 +27,12 @@ import java.util.List;
 @RequestMapping("/admin/contest")
 public class ContestAdminController {
     private final ContestUseCase contestUseCase;
-    private final S3Service s3Service;
+    private final StorageService storageService;
 
     @PostMapping(value = "/upload-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "대회 표지 이미지 업로드")
     public ResponseData<String> uploadCoverImage(@RequestPart("file") MultipartFile file) {
-        String imageUrl = s3Service.uploadFile(file, "contest");
+        String imageUrl = storageService.uploadFile(file, "contest");
         return ResponseData.created("이미지가 성공적으로 업로드되었습니다.", imageUrl);
     }
 

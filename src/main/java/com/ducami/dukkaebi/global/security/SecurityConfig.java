@@ -67,9 +67,15 @@ public class SecurityConfig {
         cors.setAllowedOriginPatterns(List.of(
                 "http://localhost:*",
                 "http://127.0.0.1:*",
+                "http://100.105.241.21:*",
+                "http://192.168.0.30:*",
+                "https://dukkaebi.wars.p-e.kr",
+                "https://admin.dukkaebi.wars.p-e.kr",
                 "https://dukkaebi.o-r.kr",
-                "https://dukkaebi.vercel.app/",
-                "https://dukkaebi-admin.vercel.app/"
+                "https://dukkaebi.vercel.app",
+                "https://dukkaebi-admin.vercel.app",
+                "https://dukkaebi-web*.vercel.app",
+                "https://dukkaebi-web-admin*.vercel.app"
         ));
         cors.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
         cors.addAllowedHeader("*");
