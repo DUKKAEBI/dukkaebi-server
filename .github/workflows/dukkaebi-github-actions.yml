@@ -107,4 +107,9 @@ jobs:
             sudo docker image prune -af
 
             sudo docker pull $IMAGE_NAME
-            sudo docker run -d -p 8080:8080 --name $CONTAINER_NAME $IMAGE_NAME
+            sudo docker run -d \
+              -p 8080:8080 \
+              --name $CONTAINER_NAME \
+              -e STORAGE_LOCAL_ROOT_PATH=/var/lib/dukkaebi/uploads \
+              -v dukkaebi-uploads:/var/lib/dukkaebi/uploads \
+              $IMAGE_NAME
