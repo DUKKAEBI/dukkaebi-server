@@ -60,11 +60,6 @@ public class LocalStorageService implements StorageService {
     }
 
     @Override
-    public String createFileName(String originalFilename, String folder) {
-        return StorageService.super.createFileName(originalFilename, folder);
-    }
-
-    @Override
     public String extractFileNameFromUrl(String fileUrl) {
         if (fileUrl == null || fileUrl.isBlank()) {
             throw new IllegalArgumentException("파일 URL이 비어 있습니다.");
