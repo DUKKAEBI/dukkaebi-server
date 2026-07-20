@@ -22,7 +22,8 @@ jobs:
           java-version: 21
           distribution: 'temurin'
 
-      - name: Set yml file
+      - name: Set yml file (main push only)
+        if: github.event_name == 'push'
         uses: microsoft/variable-substitution@v1
         with:
           files: src/main/resources/application.yml
@@ -35,8 +36,6 @@ jobs:
           jwt.secretKey: ${{ secrets.SECRET_KEY }}
           server.domain: ${{ secrets.SERVER_DOMAIN }}
           storage.provider: s3
-          storage.local.root-path: /var/lib/dukkaebi/uploads
-          storage.local.public-base-path: /files
           gemini.api-key: ${{ secrets.GEMINI_API_KEY }}
           gemini.grading-api-key: ${{ secrets.GEMINI_GRADING_API_KEY }}
           cloud.aws.s3.bucket: ${{ secrets.BUCKET_NAME }}
@@ -54,17 +53,28 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      # 3. Gradle build (조건적으로 테스트 실행)
-      - name: Build with Gradle
+      # 3. Gradle build (PR: test only)
+      - name: Build with Gradle (Pull Request)
+        if: github.event_name == 'pull_request'
         run: |
-          if [ "${{ github.event_name }}" = "push" ]; then
-            ./gradlew clean bootJar -x test
+          echo "[CI] test resource check"
+          if [ -f src/test/resources/application-test.properties ]; then
+            echo "[CI] found src/test/resources/application-test.properties"
+            awk -F= '/^spring\\.datasource\\.(url|driver-class-name|username|password)|^spring\\.jpa\\.(database|database-platform|hibernate\\.ddl-auto|show-sql)|^jwt\\.secretKey|^storage\\.provider/' src/test/resources/application-test.properties
           else
-            ./gradlew clean build
+            echo "[CI] missing src/test/resources/application-test.properties"
+            ls -la src/test/resources
+            exit 1
           fi
+          ./gradlew clean test --stacktrace --info -Dspring.profiles.active=test
+
+      - name: Build with Gradle (Main push)
+        if: github.event_name == 'push'
+        run: ./gradlew clean bootJar -x test
 
       # 4. 빌드된 JAR 확인
       - name: Check built JAR
+        if: github.event_name == 'push'
         run: ls -lh build/libs
 
       # 👇 push일 때만 실행
@@ -114,6 +124,4 @@ jobs:
             sudo docker run -d \
               -p 8080:8080 \
               --name $CONTAINER_NAME \
-              -e STORAGE_LOCAL_ROOT_PATH=/var/lib/dukkaebi/uploads \
-              -v dukkaebi-uploads:/var/lib/dukkaebi/uploads \
               $IMAGE_NAME
