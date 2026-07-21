@@ -159,46 +159,59 @@ public class JudgeService {
         }
 
         // 기존 히스토리 조회 또는 새로 생성
-        ProblemHistory history = problemHistoryJpaRepo
-                .findByUser_IdAndProblem_ProblemId(user.getId(), problemId)
-                .orElse(ProblemHistory.builder()
+        Optional<ProblemHistory> existingHistory = problemHistoryJpaRepo
+                .findByUser_IdAndProblem_ProblemId(user.getId(), problemId);
+        boolean firstAttempt = existingHistory.isEmpty();
+
+        ProblemHistory history = existingHistory
+                .orElseGet(() -> ProblemHistory.builder()
                         .user(user)
                         .problem(problem)
                         .solvedResult(SolvedResult.NOT_SOLVED)
                         .build());
+        boolean firstSolve = finalStatus == JudgeStatus.ACCEPTED && history.isNotSolved();
 
 
         // 정답 처리 시 점수 부여 (일반 문제만 - 대회 문제는 별도 처리)
-        if (finalStatus == JudgeStatus.ACCEPTED && problem.getContestId() == null) {
-            if (history.isNotSolved()) {
-                Integer reward = difficultyToScore(problem.getDifficulty());
-                try {
-                    user.addScore(reward);
-                    // 일일 활동 1 증가 (정답 1건)
-                    userActivityService.increaseTodaySolvedCount(1);
-                    log.info("점수/활동 갱신 (일반 문제) - userId: {}, +{}점, 오늘 푼 문제 +1", user.getId(), reward);
-                } catch (Exception e) {
-                    log.error("점수/활동 갱신 실패: {}", e.getMessage(), e);
-                }
+        if (firstSolve && problem.getContestId() == null) {
+            Integer reward = difficultyToScore(problem.getDifficulty());
+            try {
+                user.addScore(reward);
+                // 일일 활동 1 증가 (정답 1건)
+                userActivityService.increaseTodaySolvedCount(1);
+                log.info("점수/활동 갱신 (일반 문제) - userId: {}, +{}점, 오늘 푼 문제 +1", user.getId(), reward);
+            } catch (Exception e) {
+                log.error("점수/활동 갱신 실패: {}", e.getMessage(), e);
             }
         }
 
         // Problem의 solvedCount, attemptCount 업데이트
-        if (history.isNotSolved()) {
-            try {
+        try {
+            boolean problemStatsChanged = false;
 
-                if (finalStatus == JudgeStatus.ACCEPTED) {
-                    problem.incrementSolvedCount();
-                    problem.incrementAttemptCount();
-                    problemJpaRepo.save(problem);
-                    log.info("Problem 통계 업데이트 - problemId: {}, solvedCount: {}, attemptCount: {}",
-                            problemId, problem.getSolvedCount(), problem.getAttemptCount());
-                }
-
-
-            } catch (Exception e) {
-                log.error("Problem 통계 업데이트 실패: {}", e.getMessage(), e);
+            // 일반 문제의 attemptCount는 제출 횟수가 아니라 한 번이라도 시도한 사용자 수다.
+            if (problem.getContestId() == null && firstAttempt) {
+                problem.incrementAttemptCount();
+                problemStatsChanged = true;
             }
+
+            if (firstSolve) {
+                problem.incrementSolvedCount();
+                problemStatsChanged = true;
+
+                // 대회 문제 통계는 기존 동작(최초 정답 시 시도/정답 동시 증가)을 유지한다.
+                if (problem.getContestId() != null) {
+                    problem.incrementAttemptCount();
+                }
+            }
+
+            if (problemStatsChanged) {
+                problemJpaRepo.save(problem);
+                log.info("Problem 통계 업데이트 - problemId: {}, solvedCount: {}, attemptCount: {}",
+                        problemId, problem.getSolvedCount(), problem.getAttemptCount());
+            }
+        } catch (Exception e) {
+            log.error("Problem 통계 업데이트 실패: {}", e.getMessage(), e);
         }
 
 
