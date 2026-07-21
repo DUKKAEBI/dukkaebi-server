@@ -32,4 +32,8 @@ public class ProblemHistory {
     public void updateSolvedResult(SolvedResult solvedResult) {
         this.solvedResult = solvedResult;
     }
+
+    public boolean isNotSolved() {
+        return !SolvedResult.SOLVED.equals(solvedResult);
+    }
 }
