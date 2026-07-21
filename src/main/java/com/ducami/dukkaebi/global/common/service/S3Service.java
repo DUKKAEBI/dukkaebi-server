@@ -5,6 +5,7 @@ import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.ducami.dukkaebi.global.common.util.S3UrlUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -58,7 +59,7 @@ public class S3Service {
         }
 
         try {
-            String fileName = extractFileNameFromUrl(fileUrl);
+            String fileName = S3UrlUtil.extractFileNameFromUrl(fileUrl, bucketName);
             amazonS3Client.deleteObject(new DeleteObjectRequest(bucketName, fileName));
             log.info("S3 파일 삭제 성공: {}", fileName);
         } catch (Exception e) {
@@ -80,14 +81,4 @@ public class S3Service {
         }
         return folder + "/" + UUID.randomUUID() + extension;
     }
-
-    /**
-     * URL에서 파일명 추출
-     * @param fileUrl 파일 URL
-     * @return 추출된 파일명
-     */
-    private String extractFileNameFromUrl(String fileUrl) {
-        return fileUrl.substring(fileUrl.indexOf(bucketName) + bucketName.length() + 1);
-    }
 }
-
