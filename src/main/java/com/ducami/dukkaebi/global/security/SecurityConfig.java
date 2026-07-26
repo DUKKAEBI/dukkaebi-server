@@ -39,8 +39,11 @@ public class SecurityConfig {
                         authorize
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Preflight 허용
                                 .requestMatchers("/auth/**").permitAll()
+                                .requestMatchers("/error").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/files/**").permitAll()
                                 .requestMatchers("/user/**").authenticated()
                                 .requestMatchers("/chatbot/**").authenticated()
+                                .requestMatchers("/solve/**").authenticated()
                                 .requestMatchers("/grading/**").authenticated()
                                 .requestMatchers("/problems/**").authenticated()
                                 .requestMatchers("/course/**").authenticated()
@@ -49,7 +52,7 @@ public class SecurityConfig {
                                 .requestMatchers("/admin/**").hasRole("ADMIN")
                                 .requestMatchers("/student/**").hasRole("STUDENT")
                                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/api-docs").permitAll()
-                                .anyRequest().permitAll()
+                                .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(exceptionHandling ->
