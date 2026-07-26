@@ -22,7 +22,7 @@ public record ContestReq(
                 .imageUrl(req.imageUrl)
                 .startDate(req.startDate)
                 .endDate(req.endDate)
-                .status(ContestStatus.JOINABLE)
+                .status(ContestStatus.UPCOMING)
                 .participantIds(new ArrayList<>(List.of()))
                 .build();
     }

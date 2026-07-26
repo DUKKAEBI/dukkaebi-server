@@ -13,13 +13,15 @@ public record ContestListRes(
         String imageUrl,
         String dDay,
         Integer participantCount,
-        ContestStatus status
+        ContestStatus status,
+        boolean joined
 ) {
     private static final ZoneId ZONE = ZoneId.of("Asia/Seoul");
 
-    public static ContestListRes from(Contest contest, Long userId) {
+    public static ContestListRes from(Contest contest, boolean joined) {
         LocalDateTime now = LocalDateTime.now(ZONE);
         LocalDateTime end = contest.getEndDate();
+        LocalDateTime start = contest.getStartDate();
         String dDayStr;
 
         if (end == null) {
@@ -41,15 +43,23 @@ public record ContestListRes(
         ContestStatus status = contest.getStatus();
         if (status != ContestStatus.ENDED) {
             // 날짜로 종료 여부 판단
-            if (end != null && end.isBefore(now)) {
+            if (end != null && !end.isAfter(now)) {
                 status = ContestStatus.ENDED;
-            } else if (contest.getParticipantIds() != null && userId != null && contest.getParticipantIds().contains(userId)) {
-                status = ContestStatus.JOINED;
+            } else if (start != null && !start.isAfter(now)) {
+                status = ContestStatus.ONGOING;
             } else {
-                status = ContestStatus.JOINABLE;
+                status = ContestStatus.UPCOMING;
             }
         }
 
-        return new ContestListRes(contest.getCode(), contest.getTitle(), contest.getImageUrl(), dDayStr, count, status);
+        return new ContestListRes(
+                contest.getCode(),
+                contest.getTitle(),
+                contest.getImageUrl(),
+                dDayStr,
+                count,
+                status,
+                joined
+        );
     }
 }

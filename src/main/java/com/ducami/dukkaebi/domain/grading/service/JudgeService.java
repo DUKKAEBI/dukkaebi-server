@@ -65,6 +65,10 @@ public class JudgeService {
         Problem problem = problemJpaRepo.findById(problemId)
                 .orElseThrow(() -> new IllegalArgumentException("문제를 찾을 수 없습니다."));
 
+        User sessionUser = userSessionHolder.getUser();
+        User user = userJpaRepo.findById(sessionUser.getId())
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
         // 2. 테스트케이스 조회
         List<ProblemTestCase> testCases = testCaseJpaRepo.findByProblem_ProblemId(problemId);
 
@@ -154,13 +158,24 @@ public class JudgeService {
             }
         }
 
+        // 기존 히스토리 조회 또는 새로 생성
+        Optional<ProblemHistory> existingHistory = problemHistoryJpaRepo
+                .findByUser_IdAndProblem_ProblemId(user.getId(), problemId);
+        boolean firstAttempt = existingHistory.isEmpty();
+
+        ProblemHistory history = existingHistory
+                .orElseGet(() -> ProblemHistory.builder()
+                        .user(user)
+                        .problem(problem)
+                        .solvedResult(SolvedResult.NOT_SOLVED)
+                        .build());
+        boolean firstSolve = finalStatus == JudgeStatus.ACCEPTED && history.isNotSolved();
+
+
         // 정답 처리 시 점수 부여 (일반 문제만 - 대회 문제는 별도 처리)
-        if (finalStatus == JudgeStatus.ACCEPTED && problem.getContestId() == null) {
+        if (firstSolve && problem.getContestId() == null) {
             Integer reward = difficultyToScore(problem.getDifficulty());
             try {
-                User sessionUser = userSessionHolder.getUser();
-                User user = userJpaRepo.findById(sessionUser.getId())
-                        .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
                 user.addScore(reward);
                 // 일일 활동 1 증가 (정답 1건)
                 userActivityService.increaseTodaySolvedCount(1);
@@ -172,41 +187,48 @@ public class JudgeService {
 
         // Problem의 solvedCount, attemptCount 업데이트
         try {
-            problem.incrementAttemptCount();
-            if (finalStatus == JudgeStatus.ACCEPTED) {
-                problem.incrementSolvedCount();
+            boolean problemStatsChanged = false;
+
+            // 일반 문제의 attemptCount는 제출 횟수가 아니라 한 번이라도 시도한 사용자 수다.
+            if (problem.getContestId() == null && firstAttempt) {
+                problem.incrementAttemptCount();
+                problemStatsChanged = true;
             }
-            problemJpaRepo.save(problem);
-            log.info("Problem 통계 업데이트 - problemId: {}, solvedCount: {}, attemptCount: {}",
-                    problemId, problem.getSolvedCount(), problem.getAttemptCount());
+
+            if (firstSolve) {
+                problem.incrementSolvedCount();
+                problemStatsChanged = true;
+
+                // 대회 문제 통계는 기존 동작(최초 정답 시 시도/정답 동시 증가)을 유지한다.
+                if (problem.getContestId() != null) {
+                    problem.incrementAttemptCount();
+                }
+            }
+
+            if (problemStatsChanged) {
+                problemJpaRepo.save(problem);
+                log.info("Problem 통계 업데이트 - problemId: {}, solvedCount: {}, attemptCount: {}",
+                        problemId, problem.getSolvedCount(), problem.getAttemptCount());
+            }
         } catch (Exception e) {
             log.error("Problem 통계 업데이트 실패: {}", e.getMessage(), e);
         }
 
+
         // ProblemHistory 업데이트 (제출 여부 기록)
         try {
-            User sessionUser = userSessionHolder.getUser();
-            User user = userJpaRepo.findById(sessionUser.getId())
-                    .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+            if (history.isNotSolved()) {
+                // 정답이면 SOLVED, 오답이면 FAILED로 업데이트
+                SolvedResult result = (finalStatus == JudgeStatus.ACCEPTED)
+                        ? SolvedResult.SOLVED
+                        : SolvedResult.FAILED;
+                history.updateSolvedResult(result);
 
-            // 기존 히스토리 조회 또는 새로 생성
-            ProblemHistory history = problemHistoryJpaRepo
-                    .findByUser_IdAndProblem_ProblemId(user.getId(), problemId)
-                    .orElse(ProblemHistory.builder()
-                            .user(user)
-                            .problem(problem)
-                            .solvedResult(SolvedResult.NOT_SOLVED)
-                            .build());
+                problemHistoryJpaRepo.save(history);
+                log.info("ProblemHistory 업데이트 - userId: {}, problemId: {}, result: {}",
+                        user.getId(), problemId, result);
+            }
 
-            // 정답이면 SOLVED, 오답이면 FAILED로 업데이트
-            SolvedResult result = (finalStatus == JudgeStatus.ACCEPTED)
-                    ? SolvedResult.SOLVED
-                    : SolvedResult.FAILED;
-            history.updateSolvedResult(result);
-
-            problemHistoryJpaRepo.save(history);
-            log.info("ProblemHistory 업데이트 - userId: {}, problemId: {}, result: {}",
-                    user.getId(), problemId, result);
         } catch (Exception e) {
             log.error("ProblemHistory 업데이트 실패: {}", e.getMessage(), e);
         }

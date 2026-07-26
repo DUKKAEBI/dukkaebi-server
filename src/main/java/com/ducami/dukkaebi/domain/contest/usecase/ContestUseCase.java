@@ -41,6 +41,10 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -72,9 +76,11 @@ public class ContestUseCase {
         Long userId = userSessionHolder.getUserId();
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<ContestListRes> contestPage = contestJpaRepo.findAllByOrderByEndDateAsc(pageable)
-                .map(contest -> ContestListRes.from(contest, userId));
-        return PageResponse.of(contestPage);
+        Page<Contest> contestPage = contestJpaRepo.findAllByOrderByEndDateAsc(pageable);
+
+        Page<ContestListRes> contestResPage = mapContestPageToRes(contestPage, userId);
+
+        return PageResponse.of(contestResPage);
     }
 
     @Transactional(readOnly = true)
@@ -115,9 +121,10 @@ public class ContestUseCase {
         Long userId = userSessionHolder.getUserId();
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<ContestListRes> contestPage = contestJpaRepo.findByTitleContainingIgnoreCaseOrderByEndDateAsc(name, pageable)
-                .map(contest -> ContestListRes.from(contest, userId));
-        return PageResponse.of(contestPage);
+        Page<Contest> contestPage = contestJpaRepo.findByTitleContainingIgnoreCaseOrderByEndDateAsc(name, pageable);
+
+        Page<ContestListRes> contestResPage = mapContestPageToRes(contestPage, userId);
+        return PageResponse.of(contestResPage);
     }
 
     // 관리자
@@ -613,6 +620,29 @@ public class ContestUseCase {
         List<ProblemTestCase> testCases = problemTestCaseJpaRepo.findByProblem_ProblemId(problemId);
 
         return ContestSubmissionRes.from(submission, testCases);
+    }
+
+    private Page<ContestListRes> mapContestPageToRes(Page<Contest> contestPage, Long userId) {
+        // 1. contest Code 추출
+        List<String> contestIds = contestPage.getContent().stream()
+                .map(Contest::getCode)
+                .toList();
+
+        // 2. 사용자의 대회 참가 목록 조회
+        List<ContestParticipant> participants = contestIds.isEmpty()
+                ? List.of()
+                : contestParticipantJpaRepo.findAllByContest_CodeInAndUser_Id(contestIds, userId);
+
+        // 3. 대회 코드 기준으로 Map으로 변경
+        Map<String, ContestParticipant> participantMap = participants.stream()
+                .collect(Collectors.toMap(
+                        p -> p.getContest().getCode(),
+                        Function.identity() // p -> p
+                ));
+
+        return contestPage.map(contest ->
+                ContestListRes.from(contest, participantMap.containsKey(contest.getCode()))
+        );
     }
 
     // 시간 포맷팅 (초 -> HH:MM:SS)

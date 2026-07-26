@@ -1,7 +1,6 @@
 package com.ducami.dukkaebi.global.common.service;
 
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.AmazonS3URI;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -23,6 +22,8 @@ import java.net.URI;
 @ConditionalOnProperty(name = "storage.provider", havingValue = "s3")
 public class S3Service implements StorageService {
     private final AmazonS3Client amazonS3Client;
+
+    private static final String AMAZON_AWS_DOMAIN = ".amazonaws.com";
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
@@ -72,32 +73,44 @@ public class S3Service implements StorageService {
         }
     }
 
-    /**
-     * URL에서 파일명 추출
-     * @param fileUrl 파일 URL
-     * @return 추출된 파일명
-     */
     @Override
     public String extractFileNameFromUrl(String fileUrl) {
         if (fileUrl == null || fileUrl.isBlank()) {
-            throw new IllegalArgumentException("파일 URL이 비어 있습니다.");
+            throw new IllegalArgumentException("S3 URL은 비어 있을 수 없습니다.");
         }
 
-        AmazonS3URI s3Uri;
-        try {
-            s3Uri = new AmazonS3URI(URI.create(fileUrl));
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("올바르지 않은 S3 파일 URL입니다.", e);
+        URI uri = URI.create(fileUrl);
+        String host = uri.getHost();
+        String path = uri.getPath();
+
+        if (host == null || path == null) {
+            throw new IllegalArgumentException("유효하지 않은 S3 URL입니다.");
         }
 
-        if (!bucketName.equals(s3Uri.getBucket())) {
-            throw new IllegalArgumentException("현재 S3 버킷의 파일 URL이 아닙니다.");
+        if (isVirtualHostedStyle(host, bucketName)) {
+            return trimLeadingSlash(path);
         }
 
-        String fileName = s3Uri.getKey();
-        if (fileName == null || fileName.isBlank()) {
-            throw new IllegalArgumentException("S3 파일 경로가 비어 있습니다.");
+        if (isPathStyle(host, bucketName)) {
+            String prefix = "/" + bucketName + "/";
+            if (!path.startsWith(prefix)) {
+                throw new IllegalArgumentException("요청한 버킷과 URL이 일치하지 않습니다.");
+            }
+            return path.substring(prefix.length());
         }
-        return fileName;
+
+        throw new IllegalArgumentException("요청한 버킷과 URL이 일치하지 않습니다.");
+    }
+
+    private boolean isVirtualHostedStyle(String host, String bucketName) {
+        return host.startsWith(bucketName + ".s3.") && host.endsWith(AMAZON_AWS_DOMAIN);
+    }
+
+    private boolean isPathStyle(String host, String bucketName) {
+        return host.startsWith("s3.") && host.endsWith(AMAZON_AWS_DOMAIN) && bucketName != null && !bucketName.isBlank();
+    }
+
+    private String trimLeadingSlash(String path) {
+        return path.startsWith("/") ? path.substring(1) : path;
     }
 }
